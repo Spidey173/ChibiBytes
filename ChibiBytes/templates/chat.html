@@ -1,0 +1,526 @@
+{% extends "main-app.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #1a73e8;
+        --secondary: #9c27b0;
+        --dark-bg: #1a1a2e;
+        --darker-bg: #16213e;
+        --card-bg: rgba(26, 26, 46, 0.8);
+        --text-light: #e0e0ff;
+        --text-lighter: #f0f0ff;
+        --success: #4caf50;
+        --warning: #ff9800;
+        --danger: #f44336;
+        --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
+
+    .chat-area {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 60px);
+        overflow: hidden;
+    }
+
+    .chat-header {
+        background: var(--card-bg);
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .chat-bot-icon {
+        background: var(--gradient);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .chat-title {
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .chat-status {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--success);
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--success);
+    }
+
+    .conversation-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        background: rgba(10, 10, 20, 0.6);
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 15px;
+        border-radius: 18px;
+        margin-bottom: 10px;
+        position: relative;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bot-message {
+        align-self: flex-start;
+        background: var(--card-bg);
+        border-bottom-left-radius: 5px;
+    }
+
+    .user-message {
+        align-self: flex-end;
+        background: var(--primary);
+        border-bottom-right-radius: 5px;
+    }
+
+    .message-content {
+        line-height: 1.5;
+    }
+
+    .message-content img {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .message-time {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 5px;
+        text-align: right;
+    }
+
+    .message-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .option-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--text-light);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .option-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .input-container {
+        padding: 15px 20px;
+        background: var(--card-bg);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        gap: 10px;
+    }
+
+    .message-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px;
+        padding: 12px 20px;
+        color: var(--text-light);
+        font-size: 16px;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .message-input:focus {
+        border-color: var(--primary);
+        background: rgba(26, 115, 232, 0.1);
+    }
+
+    .send-btn {
+        background: var(--gradient);
+        border: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .send-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(156, 39, 176, 0.4);
+    }
+
+    .send-btn i {
+        font-size: 20px;
+    }
+
+    .suggestion-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 10px;
+        border-left: 3px solid var(--primary);
+    }
+
+    .suggestion-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--text-lighter);
+    }
+
+    .suggestion-details {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-bottom: 10px;
+    }
+
+    .action-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 8px;
+    }
+
+    .action-btn:hover {
+        background: #0d5bb5;
+    }
+
+    .typing-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--card-bg);
+        padding: 10px 15px;
+        border-radius: 18px;
+        border-bottom-left-radius: 5px;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-light);
+        animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-5px); }
+    }
+
+    .recommendation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+.recommendation-item {
+    background: rgba(30, 30, 50, 0.8);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+
+    .recommendation-item:hover {
+        transform: translateY(-5px);
+    }
+
+.rec-image {
+    width: 100%;
+    height: auto; /* Allow height to adjust based on image */
+    object-fit: contain; /* Prevents cropping */
+    display: block;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+
+    .rec-content {
+        padding: 12px;
+    }
+
+    .rec-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 16px;
+    }
+
+    .rec-details {
+        font-size: 13px;
+        opacity: 0.8;
+        margin-bottom: 8px;
+    }
+
+    @media (max-width: 768px) {
+        .message {
+            max-width: 90%;
+        }
+        
+        .recommendation-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Add loading spinner */
+    .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        display: inline-block;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="chat-area">
+    <div class="chat-header">
+        <div class="chat-bot-icon">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="chat-title">ChatBuddy</div>
+        <div class="chat-status">
+            <div class="status-indicator"></div>
+            <span>Online</span>
+        </div>
+    </div>
+
+    <div class="conversation-container" id="conversation">
+        <div class="message bot-message">
+            <div class="message-content">
+                <p>👋 Hello {{ username }}! I'm ChatBuddy, your personal anime and movie assistant.</p>
+                <p>How can I help you today? You can:</p>
+                <ul>
+                    <li>Type any title to get information (try "One Piece")</li>
+                    <li>You can type a word or a letter of the title</li>
+                    <li>Its info will be displayed</li>
+                </ul>
+                <div class="message-options">
+                    <div class="option-btn">Attack on Titan</div>
+                    <div class="option-btn">Your Name</div>
+                    <div class="option-btn">Recommend an anime</div>
+                    <div class="option-btn">Show my watchlist</div>
+                </div>
+            </div>
+            <div class="message-time">Just now</div>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <input type="text" class="message-input" id="user-input" placeholder="Type a title or ask a question..." autocomplete="off">
+        <button class="send-btn" id="send-btn">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const conversation = document.getElementById('conversation');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        
+        // Function to add a message to the conversation
+        function addMessage(text, isUser = false, data = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let contentHtml = `<div class="message-content">${text}</div>`;
+            
+            // Add additional content if provided
+            if (data && data.type === 'recommendations' && data.results) {
+                contentHtml += '<div class="recommendation-grid">';
+                data.results.forEach(item => {
+                    contentHtml += `
+                        <div class="recommendation-item">
+                            ${item.image ? `<img src="${item.image}" alt="${item.title}" class="rec-image">` : ''}
+                            <div class="rec-content">
+                                <div class="rec-title">${item.title}</div>
+                                <div class="rec-details">${item.year} • ⭐ ${item.rating}</div>
+                                <p>${item.description.substring(0, 100)}...</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                contentHtml += '</div>';
+            }
+            else if (data && data.type === 'info' && data.item) {
+                const item = data.item;
+                contentHtml += `
+                    <div class="suggestion-card">
+                        ${item.image ? `<img src="${item.image}" alt="${item.title}" style="max-width: 200px; border-radius: 8px; margin: 10px 0;">` : ''}
+                        <div class="suggestion-details">
+                            <strong>Year:</strong> ${item.year}<br>
+                            <strong>Rating:</strong> ${item.rating}
+                        </div>
+                        <p>${item.description}</p>
+                        ${item.insights ? `<p><strong>Insights:</strong> ${item.insights}</p>` : ''}
+                    </div>
+                `;
+            }
+            else if (data && data.type === 'watchlist' && data.items) {
+                if (data.items.length > 0) {
+                    contentHtml += '<div class="recommendation-grid">';
+                    data.items.forEach(item => {
+                        contentHtml += `
+                            <div class="recommendation-item">
+                                ${item.image ? `<img src="${item.image}" alt="${item.title}" class="rec-image">` : ''}
+                                <div class="rec-content">
+                                    <div class="rec-title">${item.title}</div>
+                                    <div class="rec-details">${item.year} • ⭐ ${item.rating}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    contentHtml += '</div>';
+                }
+            }
+            
+            messageDiv.innerHTML = `
+                ${contentHtml}
+                <div class="message-time">${time}</div>
+            `;
+            
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+        
+        // Function to simulate bot typing
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            
+            conversation.appendChild(typingDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+            return typingDiv;
+        }
+        
+        // Function to handle bot responses
+        async function getBotResponse(userMessage) {
+            // Show typing indicator
+            const typingIndicator = showTypingIndicator();
+            
+            try {
+                // Send request to backend
+                const response = await fetch('/chatbot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                
+                // Remove typing indicator
+                typingIndicator.remove();
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get response from server');
+                }
+                
+                const data = await response.json();
+                
+                // Display bot response
+                addMessage(data.response, false, data);
+                
+            } catch (error) {
+                typingIndicator.remove();
+                addMessage("Sorry, I encountered an issue. Please try again.", false);
+                console.error(error);
+            }
+        }
+
+        // Event listener for send button
+        sendBtn.addEventListener('click', function() {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                userInput.value = '';
+                getBotResponse(message);
+            }
+        });
+        
+        // Event listener for Enter key
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+        
+        // Event delegation for option buttons and actions
+        conversation.addEventListener('click', function(e) {
+            // Quick option buttons
+            if (e.target.classList.contains('option-btn')) {
+                const message = e.target.textContent;
+                addMessage(message, true);
+                getBotResponse(message);
+            }
+
+        });
+    });
+</script>
+{% endblock %}

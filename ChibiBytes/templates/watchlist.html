@@ -1,0 +1,457 @@
+{% extends "main-app.html" %}
+
+{% block content %}
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChibiBytes - My Watchlist</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .watchlist-container {
+            max-width: 1400px;
+            min-height: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .watchlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(26, 115, 232, 0.5);
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .filter-btn {
+            background: rgba(26, 115, 232, 0.3);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: linear-gradient(135deg, #1a73e8, #9c27b0);
+        }
+
+        .watchlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .empty-watchlist {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px 20px;
+            background: rgba(30, 30, 46, 0.5);
+            border-radius: 15px;
+        }
+
+        .empty-watchlist i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .empty-watchlist h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .empty-watchlist p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .explore-btn {
+            background: linear-gradient(135deg, #1a73e8, #9c27b0);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .explore-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.4);
+        }
+
+        /* Card Styles */
+        .anime-card {
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .anime-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(26, 115, 232, 0.4);
+        }
+
+        .card-image {
+            height: 380px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 0, 0, 0.7);
+            transform: scale(1.1);
+        }
+
+        .card-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .card-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #ffd700;
+            font-weight: 700;
+        }
+
+        .stars {
+            font-size: 0.9rem;
+        }
+
+        .card-plot {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            flex: 1;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-tag {
+            background: rgba(26, 115, 232, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .watchlist-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .watchlist-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .filter-controls {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .watchlist-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head><body>
+    <div class="watchlist-container">
+        <h1 class="page-title">
+            <i class="fas fa-star"></i> My Watchlist
+        </h1>
+
+        <div class="watchlist-header">
+            <div class="watchlist-info">
+                <h2><i class="fas fa-bookmark"></i> Saved Titles: <span id="itemCount">0</span></h2>
+            </div>
+        </div>
+
+        <div class="watchlist-grid" id="watchlistGrid">
+            <!-- Watchlist items will be loaded here -->
+        </div>
+    </div>
+
+<script>
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/get_watchlist')
+            .then(response => response.json())
+            .then(watchlist => {
+                renderWatchlist(watchlist);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('watchlistGrid').innerHTML = `
+                    <div class="empty-watchlist">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h2>Error Loading Watchlist</h2>
+                        <p>Failed to load your watchlist. Please try again later.</p>
+                    </div>
+                `;
+            });
+    });
+
+    function renderWatchlist(watchlist) {
+        const container = document.getElementById('watchlistGrid');
+        const countElement = document.getElementById('itemCount');
+
+        if (!Array.isArray(watchlist)) {
+            container.innerHTML = `
+                <div class="empty-watchlist">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>Data Format Error</h2>
+                    <p>Received unexpected data format for watchlist.</p>
+                </div>
+            `;
+            return;
+        }
+
+        countElement.textContent = watchlist.length;
+
+        if (watchlist.length === 0) {
+            container.innerHTML = `
+                <div class="empty-watchlist">
+                    <i class="fas fa-book-open"></i>
+                    <h2>Your Watchlist is Empty</h2>
+                    <p>Start building your watchlist by adding anime you want to watch later.</p>
+                    <a href="/anime" class="explore-btn">Explore Anime</a>
+                </div>
+            `;
+        } else {
+            container.innerHTML = watchlist.map(item => `
+                <div class="anime-card" data-id="${item.id}">
+                    <div class="card-image" style="background-image: url('${item.image}')">
+                        <button class="remove-btn" title="Remove from Watchlist">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">${item.title}</h3>
+                        <div class="card-meta">
+                            <span>${item.year || ''}</span>
+                            ${item.rating ? `
+                            <div class="card-rating">
+                                <span>${item.rating}</span>
+                                <span class="stars">${generateStars(item.rating)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-tag">${item.year ? 'Rated' : 'Added'} ${item.rating || 'to watchlist'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add event listeners for remove buttons
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.anime-card');
+                    const id = card.dataset.id;
+                    removeFromWatchlist(id);
+                });
+            });
+        }
+    }
+
+    function generateStars(rating) {
+        const num = parseFloat(rating);
+        if (isNaN(num)) return '☆☆☆☆☆';
+        const stars = Math.round(num / 2);
+        return '★'.repeat(stars) + '☆'.repeat(5 - stars);
+    }
+
+    function removeFromWatchlist(id) {
+        fetch(`/remove_from_watchlist/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.getElementById('watchlistGrid');
+                const card = container.querySelector(`[data-id="${id}"]`);
+                if (card) card.remove();
+
+                // Update count
+                const count = document.getElementById('itemCount');
+                count.textContent = parseInt(count.textContent) - 1;
+                showNotification('Item removed from your watchlist');
+            } else {
+                showNotification(data.error || 'Failed to remove item');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to remove item');
+        });
+    }
+
+    function showNotification(message) {
+        // Create notification element if it doesn't exist
+        let notification = document.getElementById('watchlistNotification');
+
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'watchlistNotification';
+            notification.className = 'notification';
+            notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(notification);
+
+            // Add styles for notification
+            const style = document.createElement('style');
+            style.textContent = `
+                .notification {
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(26, 115, 232, 0.9);
+                    color: white;
+                    padding: 15px 30px;
+                    border-radius: 30px;
+                    font-weight: 600;
+                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                    z-index: 1000;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+                .notification.show {
+                    opacity: 1;
+                }
+            `;
+            document.head.appendChild(style);
+        } else {
+            notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+        }
+
+        // Show notification
+        notification.classList.add('show');
+
+        // Hide after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+</script>
+</body>
+</html>
+{% endblock %}

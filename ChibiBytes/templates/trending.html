@@ -1,0 +1,805 @@
+{% extends "main-app.html" %}
+
+{% block content %}
+
+<style>
+    /* Container Styles */
+    .trending-container {
+        max-width: 1400px;
+        min-height: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        color: #fff;
+    }
+
+        .page-title {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #ff6ec4, #7873f5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+    .section-title {
+        font-size: 1.8rem;
+        margin: 40px 0 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(26, 115, 232, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #fff;
+    }
+
+    /* Grid Styles */
+    .trending-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 25px;
+        margin-bottom: 50px;
+    }
+
+    /* Card Styles */
+    .anime-card {
+        background: rgba(30, 30, 46, 0.8);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .anime-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(26, 115, 232, 0.4);
+    }
+
+    .card-image {
+        height: 380px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    .card-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .card-content {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #fff;
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .card-rating {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #ffd700;
+        font-weight: 700;
+    }
+
+    .stars {
+        font-size: 0.9rem;
+    }
+
+    .card-plot {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 15px;
+        flex: 1;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-watchlist {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+    }
+
+    .btn-watchlist:hover {
+        background: rgba(26, 115, 232, 0.3);
+    }
+
+    .btn-watchlist i {
+        color: #ffd700;
+    }
+
+    .card-tag {
+        background: rgba(26, 115, 232, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: #fff;
+    }
+
+    /* Loading animation */
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.2rem;
+        color: #fff;
+    }
+
+    .typing-dots {
+        display: flex;
+        gap: 4px;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        background: #1a73e8;
+        border-radius: 50%;
+        animation: bounce 1.5s infinite;
+    }
+
+    .dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .trending-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .trending-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+        }
+    }
+</style>
+
+<div class="trending-container">
+    <h1 class="page-title">
+        <i class="fas fa-fire"></i> Trending Now
+    </h1>
+
+    <!-- Top 10 Trending Anime -->
+    <h2 class="section-title">
+        <i class="fas fa-chart-line"></i> Top 10 Trending Anime Series
+    </h2>
+    <div class="trending-grid" id="trendingAnime"></div>
+
+    <!-- Top 10 Anime Movies -->
+    <h2 class="section-title">
+        <i class="fas fa-ticket-alt"></i> Top 10 Anime Movies
+    </h2>
+    <div class="trending-grid" id="trendingMovies"></div>
+
+    <!-- Top 10 Rated Anime -->
+    <h2 class="section-title">
+        <i class="fas fa-star"></i> Top 10 Rated Anime Series
+    </h2>
+    <div class="trending-grid" id="topRatedAnime"></div>
+
+    <!-- Top 10 Rated Movies -->
+    <h2 class="section-title">
+        <i class="fas fa-crown"></i> Top 10 Rated Anime Movies
+    </h2>
+    <div class="trending-grid" id="topRatedMovies"></div>
+</div>
+<script>
+    // Complete anime database with images
+    const animeDatabase = [
+        // Trending Anime Series
+        {
+            id: 25,
+            title: "Demon Slayer: Kimetsu no Yaiba",
+            year: "2019-",
+            genre: "Action, Fantasy",
+            rating: "8.7",
+            plot: "A family is attacked by demons and only two members survive - Tanjiro and his sister Nezuko, who is turning into a demon slowly.",
+            episodes: "44+",
+            type: "series",
+            image: "https://image.api.playstation.com/vulcan/ap/rnd/202106/1704/2ZfAUG5CTXdM34S1OhmMW1zF.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 3,
+            title: "Jujutsu Kaisen",
+            year: "2020-",
+            genre: "Action, Supernatural",
+            rating: "8.6",
+            plot: "A boy swallows a cursed talisman and becomes entangled in the world of sorcerers and curses.",
+            episodes: "24+",
+            type: "series",
+            image: "https://cdn.kobo.com/book-images/703d13fe-5c02-4266-a9e6-06ff5d2033d3/1200/1200/False/jujutsu-kaisen-the-official-anime-guide-season-1.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 4,
+            title: "Attack on Titan",
+            year: "2013-2023",
+            genre: "Action, Drama",
+            rating: "9.1",
+            plot: "Humanity fights for survival against giant humanoid Titans threatening their existence.",
+            episodes: "75+",
+            type: "series",
+            image: "https://m.media-amazon.com/images/M/MV5BZjliODY5MzQtMmViZC00MTZmLWFhMWMtMjMwM2I3OGY1MTRiXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 5,
+            title: "My Hero Academia",
+            year: "2016-",
+            genre: "Action, Superhero",
+            rating: "8.4",
+            plot: "A boy without powers in a super-powered world strives to become the greatest hero.",
+            episodes: "100+",
+            type: "series",
+            image: "https://wallpapers.com/images/hd/mha-pictures-w5fw8t1z5fzl9xgb.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 6,
+            title: "Chainsaw Man",
+            year: "2022-",
+            genre: "Action, Horror",
+            rating: "8.7",
+            plot: "A young man gains the ability to transform parts of his body into chainsaws.",
+            episodes: "12+",
+            type: "series",
+            image: "https://upload.wikimedia.org/wikipedia/en/9/95/Chainsaw_Man_Reze_Arc_movie_poster.jpg",
+            trending: true,
+            topRated: false
+        },
+        {
+            id: 7,
+            title: "Solo Leveling",
+            year: "2024-",
+            genre: "Action, Fantasy",
+            rating: "8.5",
+            plot: "In a world where hunters battle monsters, a weak hunter gains the ability to level up infinitely.",
+            episodes: "12+",
+            type: "series",
+            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR10cSuVX55sQslJad48Fxieb7vdpOfx3aoXQ&s",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 19,
+            title: "Oshi no Ko",
+            year: "2023-",
+            genre: "Drama, Supernatural",
+            rating: "8.8",
+            plot: "A doctor is reincarnated as the child of a famous idol, uncovering the dark side of the entertainment industry.",
+            episodes: "11+",
+            type: "series",
+            image: "https://upload.wikimedia.org/wikipedia/en/1/1c/Oshi_no_Ko_Volume_1.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 37,
+            title: "Tokyo Revengers",
+            year: "2021-",
+            genre: "Action, Time Travel",
+            rating: "7.9",
+            plot: "A man travels back in time to save his middle school girlfriend from getting killed.",
+            episodes: "36+",
+            type: "series",
+            image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p20081301_b_v8_aa.jpg",
+            trending: true,
+            topRated: false
+        },
+        {
+            id: 39,
+            title: "Mashle: Magic and Muscles",
+            year: "2023-",
+            genre: "Comedy, Fantasy",
+            rating: "7.6",
+            plot: "In a world ruled by magic, a magicless boy uses brute strength to fight through a magical academy.",
+            episodes: "24+",
+            type: "series",
+            image: "https://mlpnk72yciwc.i.optimole.com/cqhiHLc.IIZS~2ef73/w:auto/h:auto/q:75/https://bleedingcool.com/wp-content/uploads/2023/02/MASHLE-Key-Art-2x3-1.jpg",
+            trending: true,
+            topRated: false
+        },
+        {
+            id: 11,
+            title: "Frieren: Beyond Journey's End",
+            year: "2023-",
+            genre: "Fantasy, Adventure",
+            rating: "9.0",
+            plot: "An elf mage reflects on the meaning of life and memories after the death of her heroic companions.",
+            episodes: "28+",
+            type: "series",
+            image: "https://upload.wikimedia.org/wikipedia/en/6/60/Frieren_Beyond_Journey%27s_End.jpg",
+            trending: true,
+            topRated: true
+        },
+
+        // Trending Anime Movies
+        {
+            id: 89,
+            title: "Your Name",
+            year: "2016",
+            genre: "Romance, Fantasy",
+            rating: "8.8",
+            plot: "Two teenagers swap bodies and lives, developing a connection despite never meeting.",
+            episodes: "1",
+            type: "movie",
+            image: "https://w0.peakpx.com/wallpaper/57/17/HD-wallpaper-your-name-title-aesthetic-anime-title-card.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 78,
+            title: "Spirited Away",
+            year: "2001",
+            genre: "Adventure, Fantasy",
+            rating: "8.6",
+            plot: "A young girl enters a spirit world and must work to free her parents.",
+            episodes: "1",
+            type: "movie",
+            image: "https://m.media-amazon.com/images/M/MV5BNTEyNmEwOWUtYzkyOC00ZTQ4LTllZmUtMjk0Y2YwOGUzYjRiXkEyXkFqcGc@._V1_.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 86,
+            title: "Demon Slayer: Mugen Train",
+            year: "2020",
+            genre: "Action, Fantasy",
+            rating: "8.3",
+            plot: "Tanjiro and his companions investigate disappearances aboard a mysterious train.",
+            episodes: "1",
+            type: "movie",
+            image: "https://a.storyblok.com/f/178900/851x1200/c698f4e773/6ae881544ae4573cc0e833b3a70832261603631133_main.jpg/m/filters:quality(95)format(webp)",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 75,
+            title: "A Silent Voice",
+            year: "2016",
+            genre: "Drama, Romance",
+            rating: "8.1",
+            plot: "A former bully seeks redemption by reconnecting with a deaf girl he once tormented.",
+            episodes: "1",
+            type: "movie",
+            image: "https://upload.wikimedia.org/wikipedia/en/3/32/A_Silent_Voice_Film_Poster.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 76,
+            title: "Weathering With You",
+            year: "2019",
+            genre: "Romance, Fantasy",
+            rating: "7.8",
+            plot: "A high school boy runs away to Tokyo and befriends a girl who can control the weather.",
+            episodes: "1",
+            type: "movie",
+            image: "https://upload.wikimedia.org/wikipedia/en/6/66/Weathering_with_You_Poster.jpg",
+            trending: true,
+            topRated: false
+        },
+        {
+            id: 84,
+            title: "Suzume",
+            year: "2022",
+            genre: "Adventure, Drama",
+            rating: "7.7",
+            plot: "A girl's journey to close mysterious doors that bring disaster to Japan.",
+            episodes: "1",
+            type: "movie",
+            image: "https://upload.wikimedia.org/wikipedia/en/7/7f/Suzume_no_Tojimari_poster.jpg",
+            trending: true,
+            topRated: false
+        },
+        {
+            id: 85,
+            title: "The First Slam Dunk",
+            year: "2022",
+            genre: "Sports, Drama",
+            rating: "8.3",
+            plot: "A cinematic continuation of the classic Slam Dunk series, focusing on Ryota Miyagi and the final match.",
+            episodes: "1",
+            type: "movie",
+            image: "https://upload.wikimedia.org/wikipedia/en/a/ac/The_First_Slam_Dunk_Poster.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 77,
+            title: "I Want to Eat Your Pancreas",
+            year: "2018",
+            genre: "Romance, Drama",
+            rating: "8.0",
+            plot: "A terminally ill girl bonds with a shy classmate after he finds her secret diary.",
+            episodes: "1",
+            type: "movie",
+            image: "https://upload.wikimedia.org/wikipedia/en/2/2a/I_Want_to_Eat_Your_Pancreas_anime_film_poster.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 91,
+            title: "The Boy and the Heron",
+            year: "2023",
+            genre: "Fantasy, Drama",
+            rating: "7.6",
+            plot: "A young boy explores a surreal world in search of his mother in Studio Ghibli's latest feature.",
+            episodes: "1",
+            type: "movie",
+            image: "https://cvhsnews.org/wp-content/uploads/2024/01/the-boy-and-the-heron-1.jpg",
+            trending: true,
+            topRated: true
+        },
+        {
+            id: 87,
+            title: "Belle",
+            year: "2021",
+            genre: "Music, Sci-Fi",
+            rating: "7.1",
+            plot: "A shy high school student becomes a famous singer in a virtual world and uncovers a dark secret.",
+            episodes: "1",
+            type: "movie",
+            image: "https://m.media-amazon.com/images/M/MV5BYTZlOGZmMWMtOGQ1Yy00ZTBkLWIzZDUtN2E0MGE0OTkyNmEwXkEyXkFqcGc@._V1_.jpg",
+            trending: true,
+            topRated: false
+        },
+        // Top Rated Series
+        {
+            id: 8,
+            title: "Fullmetal Alchemist: Brotherhood",
+            year: "2009-2010",
+            genre: "Action, Adventure",
+            rating: "9.1",
+            plot: "Two brothers search for the Philosopher's Stone to restore their bodies after a failed alchemy experiment.",
+            episodes: "64",
+            type: "series",
+            image: "https://upload.wikimedia.org/wikipedia/en/7/7e/Fullmetal_Alchemist_Brotherhood_key_visual.png",
+            trending: false,
+            topRated: true
+        },
+        {
+            id: 17,
+            title: "Steins;Gate",
+            year: "2011",
+            genre: "Sci-Fi, Thriller",
+            rating: "9.0",
+            plot: "A group of friends discover time travel and become entangled in a dangerous conspiracy.",
+            episodes: "24",
+            type: "series",
+            image: "https://upload.wikimedia.org/wikipedia/en/c/ca/Steins%3BGate_anime_cover.png",
+            trending: false,
+            topRated: true
+        },
+        {
+            id: 18,
+            title: "Hunter x Hunter",
+            year: "2011-2014",
+            genre: "Action, Adventure",
+            rating: "9.0",
+            plot: "A young boy embarks on a journey to become a Hunter and find his father.",
+            episodes: "148",
+            type: "series",
+            image: "https://fusetees.wordpress.com/wp-content/uploads/2023/03/image-6.png?w=459",
+            trending: false,
+            topRated: true
+        },
+        {
+            id: 20,
+            title: "Cowboy Bebop",
+            year: "1998-1999",
+            genre: "Action, Sci-Fi",
+            rating: "8.8",
+            plot: "A group of bounty hunters travel through space in pursuit of dangerous criminals.",
+            episodes: "26",
+            type: "series",
+            image: "https://upload.wikimedia.org/wikipedia/en/a/a9/Cowboy_Bebop_key_visual.jpg",
+            trending: false,
+            topRated: true
+        },
+
+        // Top Rated Movies
+        {
+            id: 80,
+            title: "Princess Mononoke",
+            year: "1997",
+            genre: "Action, Adventure",
+            rating: "8.4",
+            plot: "A prince becomes involved in a struggle between forest gods and humans consuming resources.",
+            episodes: "1",
+            type: "movie",
+            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTN728ej8GWQRnt-6G3eFJLMN9ZMxrkg_UkCQ&s",
+            trending: false,
+            topRated: true
+        },
+        {
+            id: 79,
+            title: "Howl's Moving Castle",
+            year: "2004",
+            genre: "Adventure, Fantasy",
+            rating: "8.2",
+            plot: "A young woman cursed with an old body seeks help from a wizard in a magical moving castle.",
+            episodes: "1",
+            type: "movie",
+            image: "https://images.fathomevents.com/image/upload/w_1200,dpr_2,f_auto,q_auto/v1744138088/Events/2025/2014/1000x1480_Howls_FE_Ticketing.jpg.jpg",
+            trending: false,
+            topRated: true
+        },
+        {
+            id: 90,
+            title: "Ghost in the Shell",
+            year: "1995",
+            genre: "Sci-Fi, Cyberpunk",
+            rating: "8.0",
+            plot: "A cyborg policewoman hunts a mysterious hacker known as the Puppet Master.",
+            episodes: "1",
+            type: "movie",
+            image: "https://upload.wikimedia.org/wikipedia/en/1/11/Ghost_in_the_Shell_%282017_film%29.png",
+            trending: false,
+            topRated: true
+        },
+        {
+            id: 88,
+            title: "Akira",
+            year: "1988",
+            genre: "Action, Sci-Fi",
+            rating: "8.0",
+            plot: "A biker gang member develops powerful psychic abilities after a motorcycle accident.",
+            episodes: "1",
+            type: "movie",
+            image: "https://upload.wikimedia.org/wikipedia/en/5/5d/AKIRA_%281988_poster%29.jpg",
+            trending: false,
+            topRated: true
+        }
+    ];
+
+    // DOM Elements
+    const trendingAnime = document.getElementById('trendingAnime');
+    const trendingMovies = document.getElementById('trendingMovies');
+    const topRatedAnime = document.getElementById('topRatedAnime');
+    const topRatedMovies = document.getElementById('topRatedMovies');
+
+    // Generate stars for rating
+    function generateStars(rating) {
+        const numStars = Math.round(parseFloat(rating) / 2);
+        return '★'.repeat(numStars) + '☆'.repeat(5 - numStars);
+    }
+
+    // Create anime card HTML
+    function createAnimeCard(anime) {
+        return `
+            <div class="anime-card" data-id="${anime.id}">
+                <div class="card-image" style="background-image: url('${anime.image}')">
+                    <div class="card-badge">${anime.type === 'movie' ? 'Movie' : 'Series'}</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">${anime.title}</h3>
+                    <div class="card-meta">
+                        <span>${anime.year}</span>
+                        <div class="card-rating">
+                            <span>${anime.rating}</span>
+                            <span class="stars">${generateStars(anime.rating)}</span>
+                        </div>
+                    </div>
+                    <p class="card-plot">${anime.plot}</p>
+                    <div class="card-footer">
+                        <button class="btn-watchlist" data-id="${anime.id}">
+                            <i class="fas fa-plus"></i> Watchlist
+                        </button>
+                        <span class="card-tag">${anime.genre.split(',')[0].trim()}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Add to watchlist function
+    function addToWatchlist(animeId) {
+        const anime = animeDatabase.find(item => item.id === animeId);
+        if (!anime) return;
+
+        fetch('/add_to_watchlist', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                anime_id: anime.id,
+                title: anime.title,
+                year: anime.year,
+                rating: anime.rating,
+                image: anime.image
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`${anime.title} added to your watchlist!`);
+            } else {
+                showNotification(data.error || "Failed to add to watchlist");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification("Failed to add to watchlist");
+        });
+    }
+
+    // Show notification
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(notification);
+
+        // Add styles for notification
+        const style = document.createElement('style');
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: rgba(26, 115, 232, 0.9);
+                color: white;
+                border-radius: 5px;
+                z-index: 1000;
+                transform: translateX(120%);
+                transition: transform 0.4s ease;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .notification.show {
+                transform: translateX(0);
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        // Hide after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 400);
+        }, 3000);
+    }
+
+    // Setup watchlist button event listeners
+    function setupWatchlistButtons() {
+        document.querySelectorAll('.btn-watchlist').forEach(button => {
+            button.addEventListener('click', function() {
+                const animeId = parseInt(this.getAttribute('data-id'));
+                addToWatchlist(animeId);
+            });
+        });
+    }
+
+    // Filter and display content
+    function displayContent() {
+        // Top 10 Trending Anime Series
+        const trendingSeries = animeDatabase
+            .filter(item => item.trending && item.type === 'series')
+            .slice(0, 10);
+
+        trendingAnime.innerHTML = trendingSeries
+            .map(anime => createAnimeCard(anime))
+            .join('');
+
+        // Top 10 Trending Movies
+        const trendingMovieList = animeDatabase
+            .filter(item => item.trending && item.type === 'movie')
+            .slice(0, 10);
+
+        trendingMovies.innerHTML = trendingMovieList
+            .map(anime => createAnimeCard(anime))
+            .join('');
+
+        // Top 10 Rated Anime Series
+        const topRatedSeries = animeDatabase
+            .filter(item => item.topRated && item.type === 'series')
+            .sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))
+            .slice(0, 10);
+
+        topRatedAnime.innerHTML = topRatedSeries
+            .map(anime => createAnimeCard(anime))
+            .join('');
+
+        // Top 10 Rated Movies
+        const topRatedMovieList = animeDatabase
+            .filter(item => item.topRated && item.type === 'movie')
+            .sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))
+            .slice(0, 10);
+
+        topRatedMovies.innerHTML = topRatedMovieList
+            .map(anime => createAnimeCard(anime))
+            .join('');
+
+        // Setup event listeners after content is loaded
+        setupWatchlistButtons();
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', displayContent);
+</script>
+{% endblock %}
