@@ -1,0 +1,918 @@
+{% extends "main-app.html" %}
+
+{% block content %}
+<style>
+    .watchlist-container {
+        max-width: 1400px;
+        min-height: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        color: #ede0d4;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .page-header {
+        padding: 35px 20px;
+        text-align: center;
+        background: linear-gradient(180deg, rgba(192, 57, 43, 0.18) 0%, rgba(26, 18, 16, 0.75) 100%);
+        margin-bottom: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        backdrop-filter: blur(14px);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #c0392b, #ff6b35, #c0392b);
+        background-size: 200% auto;
+        animation: shimmerLine 3s linear infinite;
+    }
+
+    @keyframes shimmerLine {
+        0% { background-position: 0% center; }
+        100% { background-position: 200% center; }
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        color: #ede0d4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .page-title i {
+        color: #e74c3c;
+    }
+
+    /* Toolbar: Search + Stats */
+    .watchlist-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 24px;
+        padding: 16px 22px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+    }
+
+    .watchlist-stats {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-size: 0.95rem;
+        color: #a39080;
+    }
+
+    .watchlist-stats strong {
+        color: #ede0d4;
+        font-size: 1.1rem;
+    }
+
+    .watchlist-stats .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .stat-item i {
+        color: #e74c3c;
+    }
+
+    .watchlist-search-box {
+        position: relative;
+        min-width: 280px;
+        flex: 1;
+        max-width: 420px;
+    }
+
+    .watchlist-search-box i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a39080;
+        font-size: 0.9rem;
+    }
+
+    .watchlist-search-input {
+        width: 100%;
+        padding: 11px 16px 11px 40px;
+        background: rgba(18, 12, 11, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #ede0d4;
+        font-size: 0.9rem;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .watchlist-search-input:focus {
+        border-color: #e74c3c;
+        box-shadow: 0 0 16px rgba(231, 76, 60, 0.25);
+        background: rgba(18, 12, 11, 0.85);
+    }
+
+    /* Genre & Filter Chips */
+    .filter-chips-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+        margin-bottom: 30px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(192, 57, 43, 0.4) transparent;
+    }
+
+    .filter-chips-bar::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .filter-chips-bar::-webkit-scrollbar-thumb {
+        background: rgba(192, 57, 43, 0.4);
+        border-radius: 10px;
+    }
+
+    .filter-chip {
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: #a39080;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        user-select: none;
+    }
+
+    .filter-chip:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ede0d4;
+        transform: translateY(-2px);
+    }
+
+    .filter-chip.active {
+        background: #c0392b;
+        color: white;
+        border-color: #e74c3c;
+        box-shadow: 0 4px 16px rgba(192, 57, 43, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .filter-chip.chip-fav.active {
+        background: linear-gradient(135deg, #e74c3c 0%, #ff4757 100%);
+        box-shadow: 0 4px 18px rgba(255, 71, 87, 0.45);
+    }
+
+    .chip-count {
+        background: rgba(0, 0, 0, 0.25);
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+    }
+
+    /* Watchlist Grid */
+    .watchlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 26px;
+        margin-bottom: 60px;
+    }
+
+    .empty-watchlist {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 80px 24px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .empty-watchlist i {
+        font-size: 4.5rem;
+        margin-bottom: 24px;
+        color: #e74c3c;
+        display: inline-block;
+    }
+
+    .empty-watchlist h2 {
+        font-size: 1.6rem;
+        margin-bottom: 12px;
+        color: #ede0d4;
+        font-weight: 700;
+    }
+
+    .empty-watchlist p {
+        font-size: 1rem;
+        color: #a39080;
+        margin-bottom: 28px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    .explore-btn {
+        background: #c0392b;
+        color: white;
+        padding: 13px 30px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(192, 57, 43, 0.3);
+    }
+
+    .explore-btn:hover {
+        background: #e74c3c;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(192, 57, 43, 0.45);
+    }
+
+    /* Anime Card */
+    .anime-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .anime-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #c0392b, #ff6b35);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: 2;
+    }
+
+    .anime-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(231, 76, 60, 0.3);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45), 0 0 25px rgba(192, 57, 43, 0.15);
+    }
+
+    .anime-card:hover::before {
+        opacity: 1;
+    }
+
+    .card-image {
+        height: 360px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    .card-overlay-gradient {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(0,0,0,0.85) 100%);
+    }
+
+    /* Action Buttons on Image */
+    .remove-btn {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        background: rgba(13, 13, 13, 0.75);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a39080;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        z-index: 3;
+    }
+
+    .remove-btn:hover {
+        background: rgba(192, 57, 43, 0.35);
+        border-color: #e74c3c;
+        color: #ff4757;
+        transform: scale(1.1);
+    }
+
+    .fav-btn {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        background: rgba(13, 13, 13, 0.75);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a39080;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-size: 1.05rem;
+        z-index: 3;
+    }
+
+    .fav-btn:hover {
+        transform: scale(1.15);
+        color: #ff4757;
+    }
+
+    .fav-btn.active {
+        color: #ff4757;
+        background: rgba(255, 71, 87, 0.18);
+        border-color: rgba(255, 71, 87, 0.5);
+        box-shadow: 0 0 16px rgba(255, 71, 87, 0.4);
+    }
+
+    .fav-btn.pulse {
+        animation: heartPulse 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes heartPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.35); }
+        100% { transform: scale(1); }
+    }
+
+    .card-duration-badge {
+        position: absolute;
+        bottom: 14px;
+        left: 14px;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #ede0d4;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        z-index: 2;
+    }
+
+    .card-content {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #ede0d4;
+        line-height: 1.35;
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: #a39080;
+    }
+
+    .card-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #ffd700;
+        font-weight: 700;
+    }
+
+    .stars {
+        font-size: 0.8rem;
+    }
+
+    .card-genre-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
+    .genre-tag-pill {
+        background: rgba(192, 57, 43, 0.12);
+        border: 1px solid rgba(192, 57, 43, 0.25);
+        color: #e74c3c;
+        padding: 3px 9px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .media-type-badge {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #c9b3a3;
+        text-transform: uppercase;
+    }
+
+    /* Synopsis Accordion */
+    .synopsis-toggle-btn {
+        background: none;
+        border: none;
+        color: #a39080;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 6px 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.2s ease;
+        margin-top: auto;
+    }
+
+    .synopsis-toggle-btn:hover {
+        color: #ede0d4;
+    }
+
+    .synopsis-toggle-btn i.toggle-icon {
+        font-size: 0.7rem;
+        transition: transform 0.3s ease;
+    }
+
+    .synopsis-toggle-btn.expanded i.toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .synopsis-drawer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease, opacity 0.35s ease;
+        opacity: 0;
+    }
+
+    .synopsis-drawer.open {
+        max-height: 180px;
+        opacity: 1;
+        margin-top: 8px;
+    }
+
+    .synopsis-text {
+        font-size: 0.82rem;
+        line-height: 1.55;
+        color: #c4b3a3;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .watchlist-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .watchlist-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .watchlist-search-box {
+            min-width: 100%;
+            max-width: 100%;
+        }
+    }
+</style>
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-bookmark"></i> My Watchlist
+    </h1>
+</div>
+
+<div class="watchlist-container">
+
+    <!-- Toolbar with Stats and Search -->
+    <div class="watchlist-toolbar">
+        <div class="watchlist-stats">
+            <div class="stat-item">
+                <i class="fas fa-film"></i>
+                <span>Saved: <strong id="totalCount">0</strong></span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-heart" style="color: #ff4757;"></i>
+                <span>Favorites: <strong id="favCount">0</strong></span>
+            </div>
+        </div>
+
+        <div class="watchlist-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="watchlistSearch" class="watchlist-search-input" placeholder="Search your saved titles..." oninput="handleFilterChange()">
+        </div>
+    </div>
+
+    <!-- Dynamic Filter Chips Bar -->
+    <div class="filter-chips-bar" id="filterChipsBar">
+        <!-- Rendered dynamically by JS -->
+    </div>
+
+    <!-- Watchlist Grid -->
+    <div class="watchlist-grid" id="watchlistGrid">
+        <!-- Watchlist items loaded here -->
+    </div>
+</div>
+
+<script>
+    let rawWatchlist = {{ watchlist_items | tojson | safe }} || [];
+    let currentFilter = 'all'; // 'all', 'favorites', or genre name
+    let searchQuery = '';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (Array.isArray(rawWatchlist) && rawWatchlist.length > 0) {
+            initWatchlist(rawWatchlist);
+        } else {
+            fetch('/get_watchlist')
+                .then(res => res.json())
+                .then(data => {
+                    rawWatchlist = Array.isArray(data) ? data : [];
+                    initWatchlist(rawWatchlist);
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    document.getElementById('watchlistGrid').innerHTML = `
+                        <div class="empty-watchlist">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h2>Error Loading Watchlist</h2>
+                            <p>Failed to retrieve your watchlist. Please refresh or try again.</p>
+                        </div>
+                    `;
+                });
+        }
+    });
+
+    function initWatchlist(items) {
+        updateStats();
+        renderFilterChips();
+        renderGrid();
+    }
+
+    function updateStats() {
+        const total = rawWatchlist.length;
+        const favorites = rawWatchlist.filter(item => Boolean(item.is_favorite)).length;
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('favCount').textContent = favorites;
+    }
+
+    function renderFilterChips() {
+        const bar = document.getElementById('filterChipsBar');
+        if (!bar) return;
+
+        // Collect all distinct genres from rawWatchlist
+        const genreMap = {};
+        rawWatchlist.forEach(item => {
+            if (item.category) {
+                item.category.split(',').forEach(g => {
+                    const clean = g.trim();
+                    if (clean && clean !== 'Popular' && clean !== 'Top' && clean !== 'New' && clean !== 'Award' && clean !== 'Featured') {
+                        genreMap[clean] = (genreMap[clean] || 0) + 1;
+                    }
+                });
+            }
+        });
+
+        const favCount = rawWatchlist.filter(item => Boolean(item.is_favorite)).length;
+
+        let html = `
+            <div class="filter-chip ${currentFilter === 'all' ? 'active' : ''}" onclick="selectFilter('all')">
+                <i class="fas fa-layer-group"></i> All <span class="chip-count">${rawWatchlist.length}</span>
+            </div>
+            <div class="filter-chip chip-fav ${currentFilter === 'favorites' ? 'active' : ''}" onclick="selectFilter('favorites')">
+                <i class="fas fa-heart" style="color: #ff4757;"></i> Favorites <span class="chip-count">${favCount}</span>
+            </div>
+        `;
+
+        // Sort genres by frequency and render top genres
+        const sortedGenres = Object.keys(genreMap).sort((a, b) => genreMap[b] - genreMap[a]);
+        sortedGenres.forEach(genre => {
+            html += `
+                <div class="filter-chip ${currentFilter === genre ? 'active' : ''}" onclick="selectFilter('${genre}')">
+                    ${genre} <span class="chip-count">${genreMap[genre]}</span>
+                </div>
+            `;
+        });
+
+        bar.innerHTML = html;
+    }
+
+    function selectFilter(filterName) {
+        currentFilter = filterName;
+        renderFilterChips();
+        renderGrid();
+    }
+
+    function handleFilterChange() {
+        searchQuery = document.getElementById('watchlistSearch').value.trim().toLowerCase();
+        renderGrid();
+    }
+
+    function getFilteredItems() {
+        return rawWatchlist.filter(item => {
+            // Filter by category / favorites
+            let matchesCategory = true;
+            if (currentFilter === 'favorites') {
+                matchesCategory = Boolean(item.is_favorite);
+            } else if (currentFilter !== 'all') {
+                const cats = (item.category || '').toLowerCase();
+                matchesCategory = cats.includes(currentFilter.toLowerCase());
+            }
+
+            // Filter by search query
+            let matchesSearch = true;
+            if (searchQuery) {
+                const title = (item.title || '').toLowerCase();
+                const desc = (item.description || '').toLowerCase();
+                const cat = (item.category || '').toLowerCase();
+                matchesSearch = title.includes(searchQuery) || desc.includes(searchQuery) || cat.includes(searchQuery);
+            }
+
+            return matchesCategory && matchesSearch;
+        });
+    }
+
+    function renderGrid() {
+        const container = document.getElementById('watchlistGrid');
+        const items = getFilteredItems();
+
+        if (rawWatchlist.length === 0) {
+            container.innerHTML = `
+                <div class="empty-watchlist">
+                    <i class="fas fa-book-open"></i>
+                    <h2>Your Watchlist is Empty</h2>
+                    <p>Start building your watchlist by adding anime you want to watch later.</p>
+                    <a href="/anime" class="explore-btn"><i class="fas fa-compass"></i> Explore Anime</a>
+                </div>
+            `;
+            return;
+        }
+
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="empty-watchlist">
+                    <i class="fas fa-filter"></i>
+                    <h2>No Matching Titles</h2>
+                    <p>No titles matched your active filter or search. Try selecting "All" or clearing the search bar.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = items.map(item => {
+            const isFav = Boolean(item.is_favorite);
+            const safeTitle = (item.title || '').replace(/'/g, "\\'");
+            const categories = (item.category || '').split(',').map(c => c.trim()).filter(c => c && c !== 'Popular' && c !== 'Top' && c !== 'New' && c !== 'Featured').slice(0, 2);
+            const catPills = categories.map(c => `<span class="genre-tag-pill">${c}</span>`).join('');
+            const durationText = item.episodes ? `${item.episodes}` : (item.media_type === 'movie' ? 'Movie' : 'TV Anime');
+            const mediaTypeLabel = item.media_type === 'movie' ? 'Movie' : 'TV';
+
+            return `
+                <div class="anime-card" data-id="${item.id}" id="card-${item.id}">
+                    <div class="card-image" style="background-image: url('${item.image}')">
+                        <div class="card-overlay-gradient"></div>
+                        
+                        <button class="remove-btn" onclick="removeFromWatchlist(${item.id}, '${safeTitle}')" title="Remove from Watchlist">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        
+                        <button class="fav-btn ${isFav ? 'active' : ''}" id="fav-${item.id}" onclick="toggleFavorite(${item.id}, event)" title="${isFav ? 'Favorited' : 'Add to Favorites'}">
+                            <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
+                        </button>
+
+                        <div class="card-duration-badge">
+                            <i class="${item.media_type === 'movie' ? 'fas fa-film' : 'fas fa-tv'}"></i>
+                            <span>${durationText}</span>
+                        </div>
+                    </div>
+
+                    <div class="card-content">
+                        <h3 class="card-title">${item.title}</h3>
+                        
+                        <div class="card-meta">
+                            <span>${item.year || ''}</span>
+                            <span class="media-type-badge">${mediaTypeLabel}</span>
+                            ${item.rating ? `
+                            <div class="card-rating">
+                                <span>${item.rating}</span>
+                                <span class="stars">${generateStars(item.rating)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        ${catPills ? `<div class="card-genre-tags">${catPills}</div>` : ''}
+
+                        ${item.description ? `
+                        <button class="synopsis-toggle-btn" id="syn-btn-${item.id}" onclick="toggleSynopsis(${item.id})">
+                            <i class="fas fa-align-left"></i> <span>Synopsis</span> <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        <div class="synopsis-drawer" id="syn-drawer-${item.id}">
+                            <p class="synopsis-text">${item.description}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function generateStars(rating) {
+        const num = parseFloat(rating);
+        if (isNaN(num)) return '☆☆☆☆☆';
+        const stars = Math.round(num / 2);
+        return '★'.repeat(stars) + '☆'.repeat(5 - stars);
+    }
+
+    function toggleSynopsis(id) {
+        const drawer = document.getElementById(`syn-drawer-${id}`);
+        const btn = document.getElementById(`syn-btn-${id}`);
+        if (!drawer || !btn) return;
+
+        const isOpen = drawer.classList.contains('open');
+        if (isOpen) {
+            drawer.classList.remove('open');
+            btn.classList.remove('expanded');
+        } else {
+            drawer.classList.add('open');
+            btn.classList.add('expanded');
+        }
+    }
+
+    function toggleFavorite(id, event) {
+        if (event) event.stopPropagation();
+        const btn = document.getElementById(`fav-${id}`);
+
+        fetch(`/toggle_favorite/${id}`, {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const target = rawWatchlist.find(i => i.id === id);
+                if (target) {
+                    target.is_favorite = data.is_favorite;
+                }
+
+                if (btn) {
+                    btn.classList.add('pulse');
+                    setTimeout(() => btn.classList.remove('pulse'), 450);
+
+                    if (data.is_favorite) {
+                        btn.classList.add('active');
+                        btn.innerHTML = '<i class="fas fa-heart"></i>';
+                        btn.title = 'Favorited';
+                        showNotification('Added to your Favorites ❤️');
+                    } else {
+                        btn.classList.remove('active');
+                        btn.innerHTML = '<i class="far fa-heart"></i>';
+                        btn.title = 'Add to Favorites';
+                        showNotification('Removed from Favorites');
+                    }
+                }
+
+                updateStats();
+                renderFilterChips();
+
+                // If currently viewing favorites and un-favorited, re-render
+                if (currentFilter === 'favorites' && !data.is_favorite) {
+                    const card = document.getElementById(`card-${id}`);
+                    if (card) {
+                        card.style.transition = 'all 0.35s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => renderGrid(), 350);
+                    }
+                }
+            } else {
+                showNotification(data.error || 'Could not update favorite');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showNotification('Could not update favorite');
+        });
+    }
+
+    function removeFromWatchlist(id, title) {
+        fetch(`/remove_from_watchlist/${id}`, {
+            method: 'DELETE'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const card = document.getElementById(`card-${id}`);
+                if (card) {
+                    card.style.transition = 'all 0.35s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9) translateY(20px)';
+                    setTimeout(() => {
+                        rawWatchlist = rawWatchlist.filter(i => i.id !== id);
+                        updateStats();
+                        renderFilterChips();
+                        renderGrid();
+                    }, 350);
+                }
+                showNotification(`"${title}" removed from watchlist`);
+            } else {
+                showNotification(data.error || 'Failed to remove item');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showNotification('Failed to remove item');
+        });
+    }
+
+    function showNotification(message) {
+        const existing = document.getElementById('watchlistNotification');
+        if (existing) existing.remove();
+
+        const notification = document.createElement('div');
+        notification.id = 'watchlistNotification';
+        notification.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: linear-gradient(135deg, #c0392b 0%, #ff4757 100%);
+            color: white;
+            padding: 13px 26px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(192, 57, 43, 0.45);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+        document.body.appendChild(notification);
+
+        requestAnimationFrame(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(-50%) translateY(0)';
+        });
+
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(-50%) translateY(20px)';
+            setTimeout(() => notification.remove(), 350);
+        }, 3000);
+    }
+</script>
+{% endblock %}
