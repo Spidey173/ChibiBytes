@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChibiBytes - {{ username }}</title>
+    <link rel="preconnect" href="https://i.pinimg.com" crossorigin>
+    <link rel="dns-prefetch" href="https://i.pinimg.com">
+    <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
+    <link rel="dns-prefetch" href="https://upload.wikimedia.org">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --magma-black: #0d0d0d;
+            --magma-surface: #1a1210;
+            --magma-elevated: #261a15;
+            --magma-red: #c0392b;
+            --magma-ember: #e74c3c;
+            --magma-orange: #d35400;
+            --magma-glow: #ff6b35;
+            --text-primary: #ede0d4;
+            --text-secondary: #a39080;
+            --text-dim: #6b5b50;
+            --border-subtle: rgba(192, 57, 43, 0.12);
+            --surface-hover: rgba(192, 57, 43, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--magma-black);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        /* Grain overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 200px;
+        }
+
+        /* ═══════════════════════════════════
+           APP LAYOUT
+        ═══════════════════════════════════ */
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ═══════════════════════════════════
+           SIDEBAR — solid, warm dark
+        ═══════════════════════════════════ */
+        .sidebar {
+            background: var(--magma-surface);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* ═══════════════════════════════════
+           LOGO
+        ═══════════════════════════════════ */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            text-decoration: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--magma-red);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        /* ═══════════════════════════════════
+           USER INFO
+        ═══════════════════════════════════ */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            position: relative;
+            z-index: 2;
+            transition: var(--transition);
+        }
+
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--magma-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-details h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-details p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* ═══════════════════════════════════
+           NAVIGATION — clean, red accent
+        ═══════════════════════════════════ */
+        .nav-section {
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-link i {
+            font-size: 0.9rem;
+            width: 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-link:hover i {
+            color: var(--magma-ember);
+        }
+
+        /* Active state: thin red left border + tint */
+        .nav-link.active {
+            color: var(--text-primary);
+            background: var(--surface-hover);
+        }
+
+        .nav-link.active i {
+            color: var(--magma-ember);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 55%;
+            background: var(--magma-red);
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Logout */
+        .nav-link.logout-link:hover {
+            background: rgba(192, 57, 43, 0.06);
+        }
+
+        .nav-link.logout-link:hover i {
+            color: var(--magma-ember);
+        }
+
+        /* ═══════════════════════════════════
+           MAIN CONTENT
+        ═══════════════════════════════════ */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background: var(--magma-black);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Scrollbar */
+        .content-area::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: rgba(192, 57, 43, 0.2);
+            border-radius: 3px;
+        }
+
+        .content-area::-webkit-scrollbar-thumb:hover {
+            background: rgba(192, 57, 43, 0.35);
+        }
+
+        /* ═══════════════════════════════════
+           MOBILE SIDEBAR TOGGLE
+        ═══════════════════════════════════ */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 100;
+            width: 42px;
+            height: 42px;
+            background: var(--magma-red);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .mobile-toggle:hover {
+            background: var(--magma-ember);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 8;
+        }
+
+        /* ═══════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════ */
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                width: 260px;
+                z-index: 50;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .content-area {
+                padding: 64px 16px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="app-container">
+        <div class="sidebar" id="sidebar">
+            <a href="/anime" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-film"></i>
+                </div>
+                <div class="logo-text">ChibiBytes</div>
+            </a>
+
+            <div class="user-info">
+                <div class="user-avatar" style="{% if session.get('role') == 'admin' or role == 'admin' %}background: #ff6b35;{% endif %}">
+                    <i class="fas {% if session.get('role') == 'admin' or role == 'admin' %}fa-user-shield{% else %}fa-user{% endif %}"></i>
+                </div>
+                <div class="user-details">
+                    <h3>{{ username }}</h3>
+                    <p>{% if session.get('role') == 'admin' or role == 'admin' %}<span style="color:#ff6b35; font-weight:600;">System Administrator</span>{% else %}Anime Enthusiast{% endif %}</p>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="section-title">Categories</div>
+                <ul class="nav-links">
+                    <li><a class="nav-link {% if active_page == 'anime' %}active{% endif %}" href="/anime">
+                        <i class="fas fa-tv"></i>
+                        <span>Anime</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'movies' %}active{% endif %}" href="/movies">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Movies</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'genres' %}active{% endif %}" href="/genres">
+                        <i class="fas fa-theater-masks"></i>
+                        <span>Genres</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'chat' %}active{% endif %}" href="/chat">
+                        <i class="fas fa-comments"></i>
+                        <span>Chat Assistant</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'trending' %}active{% endif %}" href="/trending">
+                        <i class="fas fa-fire"></i>
+                        <span>Trending Now</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'watchlist' %}active{% endif %}" href="/watchlist">
+                        <i class="fas fa-star"></i>
+                        <span>My Watchlist</span>
+                    </a></li>
+                    {% if session.get('role') == 'admin' or role == 'admin' %}
+                    <li><a class="nav-link {% if active_page == 'admin' %}active{% endif %}" href="/admin" style="color: #ff6b35; font-weight: 600;">
+                        <i class="fas fa-shield-alt" style="color: #ff6b35;"></i>
+                        <span>Admin Panel</span>
+                    </a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="nav-section" style="margin-top: auto;">
+                <ul class="nav-links">
+                    <li><a class="nav-link logout-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="content-area">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════
+           MOBILE SIDEBAR TOGGLE
+        ═══════════════════════════════════ */
+        const mobileToggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('active');
+                const icon = mobileToggle.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+                const icon = mobileToggle.querySelector('i');
+                icon.classList.add('fa-bars');
+                icon.classList.remove('fa-times');
+            });
+        }
+    </script>
+</body>
+</html>
