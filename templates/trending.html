@@ -1,0 +1,557 @@
+{% extends "main-app.html" %}
+
+{% block content %}
+
+<style>
+    /* Container Styles */
+    .trending-container {
+        max-width: 1400px;
+        min-height: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        color: #ede0d4;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: #ede0d4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        font-weight: 800;
+    }
+
+    .page-title i {
+        color: #e74c3c;
+        
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        margin: 40px 0 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ede0d4;
+        font-weight: 700;
+    }
+
+    .section-title i {
+        color: #e74c3c;
+    }
+
+    /* Grid Styles */
+    .trending-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 50px;
+    }
+
+    /* Card Styles */
+    .anime-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        
+        position: relative;
+    }
+
+    .anime-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #c0392b;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: 2;
+    }
+
+    .anime-card:hover::before {
+        opacity: 1;
+    }
+
+    .anime-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(192, 57, 43, 0.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(192, 57, 43, 0.06);
+    }
+
+    .card-image {
+        height: 380px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    .card-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        color: #e74c3c;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
+    }
+
+    .card-content {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #ede0d4;
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 0.88rem;
+        color: #a39080;
+    }
+
+    .card-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #ffd700;
+        font-weight: 700;
+        
+    }
+
+    .stars {
+        font-size: 0.85rem;
+    }
+
+    .card-plot {
+        font-size: 0.92rem;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        flex: 1;
+        color: #a39080;
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-watchlist {
+        background: rgba(192, 57, 43, 0.1);
+        border: 1px solid rgba(192, 57, 43, 0.1);
+        color: #ede0d4;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+
+    .btn-watchlist:hover {
+        background: rgba(192, 57, 43, 0.2);
+        border-color: #e74c3c;
+        
+        transform: translateY(-2px);
+    }
+
+    .btn-watchlist i {
+        color: #ffd700;
+        
+    }
+
+    .card-tag {
+        background: rgba(192, 57, 43, 0.1);
+        border: 1px solid rgba(192, 57, 43, 0.1);
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        color: #e74c3c;
+        font-weight: 500;
+    }
+
+    /* Loading animation */
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.2rem;
+        color: #ede0d4;
+    }
+
+    .typing-dots {
+        display: flex;
+        gap: 5px;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        animation: dotBounce 1.5s infinite;
+    }
+
+    .dot:nth-child(1) { background: #c0392b; }
+    .dot:nth-child(2) { background: #e74c3c; animation-delay: 0.2s; }
+    .dot:nth-child(3) { background: #d35400; animation-delay: 0.4s; }
+
+    @keyframes dotBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .trending-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .trending-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+        }
+    }
+
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(38, 26, 21, 0.95);
+            border: 1px solid rgba(192, 57, 43, 0.4);
+            border-left: 4px solid #ff6b35;
+            color: #ede0d4;
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 2000;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .page-header {
+            padding: 35px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(192, 57, 43, 0.14) 0%, rgba(26, 18, 16, 0.65) 100%);
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #c0392b, #ff6b35, #c0392b);
+            background-size: 200% auto;
+            animation: shimmerLine 3s linear infinite;
+        }
+
+        @keyframes shimmerLine {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            color: #ede0d4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .page-title i {
+            color: #e74c3c;
+        }
+</style>
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-fire"></i> Trending Now
+    </h1>
+</div>
+
+<div class="trending-container">
+
+    <!-- Top 10 Trending Anime -->
+    <h2 class="section-title">
+        <i class="fas fa-chart-line"></i> Top 10 Trending Anime Series
+    </h2>
+    <div class="trending-grid" id="trendingAnime"></div>
+
+    <!-- Top 10 Anime Movies -->
+    <h2 class="section-title">
+        <i class="fas fa-ticket-alt"></i> Top 10 Anime Movies
+    </h2>
+    <div class="trending-grid" id="trendingMovies"></div>
+
+    <!-- Top 10 Rated Anime -->
+    <h2 class="section-title">
+        <i class="fas fa-star"></i> Top 10 Rated Anime Series
+    </h2>
+    <div class="trending-grid" id="topRatedAnime"></div>
+
+    <!-- Top 10 Rated Movies -->
+    <h2 class="section-title">
+        <i class="fas fa-crown"></i> Top 10 Rated Anime Movies
+    </h2>
+    <div class="trending-grid" id="topRatedMovies"></div>
+</div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText"></span>
+    </div>
+
+<script>
+    let serverAnime = {{ anime_list | tojson | safe }} || [];
+    let serverMovies = {{ movies_list | tojson | safe }} || [];
+    let animeDatabase = [];
+
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notificationText');
+
+    function showNotification(message) {
+        if (!notification || !notificationText) return;
+        notificationText.textContent = message;
+        notification.classList.add('show');
+        setTimeout(() => notification.classList.remove('show'), 3000);
+    }
+
+    async function loadTrendingData() {
+        if (serverAnime.length > 0 || serverMovies.length > 0) {
+            const parsedAnime = serverAnime.map(a => ({
+                id: a.id,
+                title: a.title,
+                year: a.year || '2024',
+                genre: a.category || 'Anime',
+                rating: a.rating || '8.5',
+                plot: a.description || '',
+                type: 'series',
+                image: a.image,
+                trending: true,
+                topRated: parseFloat(a.rating || 0) >= 8.5
+            }));
+
+            const parsedMovies = serverMovies.map(m => ({
+                id: m.id,
+                title: m.title,
+                year: m.year || '2024',
+                genre: m.category || 'Movie',
+                rating: m.rating || '8.5',
+                plot: m.description || '',
+                type: 'movie',
+                image: m.image,
+                trending: true,
+                topRated: parseFloat(m.rating || 0) >= 8.5
+            }));
+
+            animeDatabase = [...parsedAnime, ...parsedMovies];
+            displayContent();
+        } else {
+            try {
+                const [animeRes, moviesRes] = await Promise.all([
+                    fetch('/api/anime'),
+                    fetch('/api/movies')
+                ]);
+                const animeList = await animeRes.json();
+                const moviesList = await moviesRes.json();
+
+                const parsedAnime = (Array.isArray(animeList) ? animeList : []).map(a => ({
+                    id: a.id,
+                    title: a.title,
+                    year: a.year || '2024',
+                    genre: a.category || 'Anime',
+                    rating: a.rating || '8.5',
+                    plot: a.description || '',
+                    type: 'series',
+                    image: a.image,
+                    trending: true,
+                    topRated: parseFloat(a.rating || 0) >= 8.5
+                }));
+
+                const parsedMovies = (Array.isArray(moviesList) ? moviesList : []).map(m => ({
+                    id: m.id,
+                    title: m.title,
+                    year: m.year || '2024',
+                    genre: m.category || 'Movie',
+                    rating: m.rating || '8.5',
+                    plot: m.description || '',
+                    type: 'movie',
+                    image: m.image,
+                    trending: true,
+                    topRated: parseFloat(m.rating || 0) >= 8.5
+                }));
+
+                animeDatabase = [...parsedAnime, ...parsedMovies];
+                displayContent();
+            } catch (err) {
+                console.error('Error loading trending data:', err);
+            }
+        }
+    }
+
+    const trendingAnime = document.getElementById('trendingAnime');
+    const trendingMovies = document.getElementById('trendingMovies');
+    const topRatedAnime = document.getElementById('topRatedAnime');
+    const topRatedMovies = document.getElementById('topRatedMovies');
+
+    let userWatchlist = [];
+    function fetchWatchlist() {
+        return fetch('/get_watchlist')
+            .then(res => res.json())
+            .then(data => {
+                userWatchlist = data;
+                displayContent();
+            })
+            .catch(err => console.error('Error fetching watchlist:', err));
+    }
+
+    function generateStars(rating) {
+        const numStars = Math.round(parseFloat(rating) / 2);
+        return '★'.repeat(numStars) + '☆'.repeat(Math.max(0, 5 - numStars));
+    }
+
+    function createAnimeCard(anime) {
+        const isInWatchlist = userWatchlist.some(item => item.anime_id == anime.id);
+        const buttonHtml = isInWatchlist 
+            ? `<button class="btn-watchlist" disabled style="opacity: 0.6; cursor: not-allowed;"><i class="fas fa-check"></i> Already in Watchlist</button>`
+            : `<button class="btn-watchlist" onclick="addToWatchlist(${anime.id})"><i class="fas fa-plus"></i> Watchlist</button>`;
+
+        return `
+            <div class="anime-card" data-id="${anime.id}">
+                <div class="card-image" style="background-image: url('${anime.image}')">
+                    <div class="card-badge">${anime.type === 'movie' ? 'Movie' : 'Series'}</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">${anime.title}</h3>
+                    <div class="card-meta">
+                        <span>${anime.year}</span>
+                        <div class="card-rating">
+                            <span>${anime.rating}</span>
+                            <span class="stars">${generateStars(anime.rating)}</span>
+                        </div>
+                    </div>
+                    <p class="card-plot">${anime.plot}</p>
+                    <div class="card-footer">
+                        ${buttonHtml}
+                        <span class="card-tag">${(anime.genre || 'Anime').split(',')[0].trim()}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function addToWatchlist(animeId) {
+        const anime = animeDatabase.find(item => item.id == animeId);
+        if (!anime) return;
+
+        showNotification(`${anime.title} added to your watchlist!`);
+
+        fetch('/add_to_watchlist', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                anime_id: anime.id,
+                title: anime.title,
+                year: anime.year,
+                rating: anime.rating,
+                image: anime.image
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                userWatchlist.push({ anime_id: anime.id });
+                displayContent();
+            } else if (data.error && data.error !== 'Already in watchlist') {
+                showNotification(data.error);
+            }
+        })
+        .catch(() => {});
+    }
+
+    function displayContent() {
+        const trendingSeries = animeDatabase.filter(item => item.trending && item.type === 'series').slice(0, 10);
+        if (trendingAnime) trendingAnime.innerHTML = trendingSeries.map(anime => createAnimeCard(anime)).join('');
+
+        const trendingMovieList = animeDatabase.filter(item => item.trending && item.type === 'movie').slice(0, 10);
+        if (trendingMovies) trendingMovies.innerHTML = trendingMovieList.map(anime => createAnimeCard(anime)).join('');
+
+        const topRatedSeries = animeDatabase.filter(item => item.topRated && item.type === 'series').sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating)).slice(0, 10);
+        if (topRatedAnime) topRatedAnime.innerHTML = topRatedSeries.map(anime => createAnimeCard(anime)).join('');
+
+        const topRatedMovieList = animeDatabase.filter(item => item.topRated && item.type === 'movie').sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating)).slice(0, 10);
+        if (topRatedMovies) topRatedMovies.innerHTML = topRatedMovieList.map(anime => createAnimeCard(anime)).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTrendingData();
+        fetchWatchlist();
+    });
+</script>
+{% endblock %}
