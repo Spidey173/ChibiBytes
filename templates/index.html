@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChibiBytes - The Ultimate Anime Universe</title>
+    <meta name="description"
+        content="Discover, explore, and track anime movies and series with ChibiBytes — stream official cinema trailers, build your personal watchlist, and experience AI-powered discovery.">
+    <link rel="preconnect" href="https://s4.anilist.co" crossorigin>
+    <link rel="dns-prefetch" href="https://s4.anilist.co">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --magma-black: #0c0807;
+            --magma-red: #c0392b;
+            --magma-ember: #e74c3c;
+            --magma-orange: #ff6b35;
+            --magma-gold: #f39c12;
+            --text-primary: #ede0d4;
+            --text-secondary: #a39080;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--magma-black);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            user-select: none;
+        }
+
+        /* ═══════════════════════════════════
+           CINEMATIC FULLSCREEN VIEWPORT
+        ═══════════════════════════════════ */
+        .intro-viewport {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* ═══════════════════════════════════
+           MOVING PANORAMA BACKGROUND LAYERS
+           (Continuous Ken Burns Motion)
+        ═══════════════════════════════════ */
+        .bg-layer-wrap {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .bg-slide {
+            position: absolute;
+            inset: -4%;
+            background-size: cover;
+            background-position: center 25%;
+            opacity: 0;
+            transition: opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: kenBurnsMotion 26s ease-in-out infinite alternate;
+            will-change: transform, opacity;
+        }
+
+        .bg-slide.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        @keyframes kenBurnsMotion {
+            0% {
+                transform: scale(1.0) translate(0%, 0%);
+            }
+
+            50% {
+                transform: scale(1.12) translate(-1.8%, -1.2%);
+            }
+
+            100% {
+                transform: scale(1.05) translate(1.2%, 0.8%);
+            }
+        }
+
+        /* Cinematic Vignette & Magma Gradients */
+        .cinematic-vignette {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            background:
+                radial-gradient(circle at 75% 45%, rgba(12, 8, 7, 0.15) 0%, rgba(12, 8, 7, 0.75) 60%, rgba(12, 8, 7, 0.98) 100%),
+                linear-gradient(90deg, rgba(12, 8, 7, 0.96) 0%, rgba(12, 8, 7, 0.82) 42%, rgba(12, 8, 7, 0.35) 75%, rgba(12, 8, 7, 0.6) 100%),
+                linear-gradient(0deg, rgba(12, 8, 7, 0.95) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* Floating Ember Canvas */
+        #emberCanvas {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        /* ═══════════════════════════════════
+           TOP NAVIGATION BAR
+        ═══════════════════════════════════ */
+        .intro-navbar {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 48px;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--magma-red), var(--magma-orange));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-wrap:hover .logo-icon {
+            transform: scale(1.08) rotate(3deg);
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 1.65rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            color: var(--magma-orange);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-nav-login {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: var(--text-primary);
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-nav-login:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-nav-register {
+            background: linear-gradient(135deg, #c0392b 0%, #ff6b35 100%);
+            border: 1px solid rgba(255, 107, 53, 0.4);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(192, 57, 43, 0.4);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-nav-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 107, 53, 0.55);
+            border-color: #ffd700;
+        }
+
+        /* ═══════════════════════════════════
+           CENTER STAGE: HERO INTRO CONTENT
+        ═══════════════════════════════════ */
+        .intro-center-stage {
+            position: relative;
+            z-index: 10;
+            padding: 0 48px;
+            max-width: 880px;
+        }
+
+        .hero-top-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(192, 57, 43, 0.22);
+            border: 1px solid rgba(255, 107, 53, 0.45);
+            border-radius: 30px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #ff6b35;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            backdrop-filter: blur(10px);
+            animation: pulseGlow 3s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(192, 57, 43, 0.25);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 107, 53, 0.45);
+            }
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 6.2vw, 4.8rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -1.2px;
+            margin-bottom: 14px;
+            color: #ffffff;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.9);
+            text-transform: uppercase;
+            transition: opacity 0.3s ease;
+        }
+
+        .hero-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .meta-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #ffd700;
+            font-weight: 800;
+            font-size: 0.95rem;
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ede0d4;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .meta-pill.meta-age {
+            color: #ff6b35;
+            border-color: rgba(255, 107, 53, 0.35);
+            background: rgba(255, 107, 53, 0.12);
+        }
+
+        .meta-genre-tags {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .genre-tag {
+            color: #b5a496;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+
+        .genre-tag:not(:last-child)::after {
+            content: "•";
+            margin-left: 8px;
+            color: #6b5b50;
+        }
+
+        .hero-dynamic-tagline {
+            font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+            color: #ede0d4;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+            transition: opacity 0.3s ease;
+        }
+
+        .hero-dynamic-tagline i {
+            color: var(--magma-orange);
+        }
+
+        .hero-description {
+            font-size: 1.02rem;
+            line-height: 1.6;
+            color: #b5a496;
+            margin-bottom: 28px;
+            max-width: 660px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+            transition: opacity 0.3s ease;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .billboard-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-play-trailer {
+            background: linear-gradient(135deg, #c0392b 0%, #ff6b35 100%);
+            border: 1px solid rgba(255, 107, 53, 0.5);
+            color: white;
+            padding: 15px 34px;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(192, 57, 43, 0.55), 0 0 25px rgba(255, 107, 53, 0.35);
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+        }
+
+        .btn-play-trailer:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 14px 45px rgba(192, 57, 43, 0.75), 0 0 35px rgba(255, 107, 53, 0.5);
+            border-color: #ffd700;
+        }
+
+        .btn-explore-catalog {
+            background: rgba(26, 18, 16, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #ede0d4;
+            padding: 15px 30px;
+            border-radius: 14px;
+            font-size: 1.02rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-explore-catalog:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: white;
+        }
+
+        /* ═══════════════════════════════════
+           HERO CAROUSEL PREV / NEXT BUTTONS
+        ═══════════════════════════════════ */
+        .intro-carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(26, 18, 16, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ede0d4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            z-index: 25;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        }
+
+        .intro-carousel-nav:hover {
+            background: rgba(192, 57, 43, 0.9);
+            border-color: #ff6b35;
+            color: #ffffff;
+            transform: translateY(-50%) scale(1.12);
+            box-shadow: 0 10px 30px rgba(192, 57, 43, 0.55);
+        }
+
+        .intro-carousel-nav.prev {
+            left: 32px;
+        }
+
+        .intro-carousel-nav.next {
+            right: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .intro-carousel-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            .intro-carousel-nav.prev { left: 10px; }
+            .intro-carousel-nav.next { right: 10px; }
+        }
+
+        /* ═══════════════════════════════════
+           BOTTOM CINEMATIC CAROUSEL SELECTOR
+        ═══════════════════════════════════ */
+        .intro-bottom-bar {
+            position: relative;
+            z-index: 10;
+            padding: 24px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: linear-gradient(180deg, transparent 0%, rgba(12, 8, 7, 0.85) 100%);
+        }
+
+        .featured-pills-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow-x: auto;
+            overflow-y: visible;
+            padding: 8px 4px 6px;
+        }
+
+        .featured-pill {
+            position: relative;
+            background: rgba(26, 18, 16, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #a39080;
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .featured-pill:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ede0d4;
+            transform: translateY(-2px);
+        }
+
+        .featured-pill.active {
+            background: rgba(192, 57, 43, 0.28);
+            border: 1.5px solid var(--magma-orange);
+            color: white;
+            box-shadow: 0 4px 18px rgba(192, 57, 43, 0.4), inset 0 0 12px rgba(255, 107, 53, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .pill-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(90deg, #c0392b, #ff6b35);
+        }
+
+        .featured-pill.active .pill-progress-bar {
+            animation: pillTimer 8s linear infinite;
+        }
+
+        @keyframes pillTimer {
+            0% {
+                width: 0%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        .portal-stats-snippet {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 0.86rem;
+            color: #8f7d6f;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-badge strong {
+            color: #ede0d4;
+        }
+
+        /* ═══════════════════════════════════
+           CINEMA TRAILER MODAL
+        ═══════════════════════════════════ */
+        .cinema-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .cinema-modal.active {
+            display: flex;
+        }
+
+        .cinema-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(24px);
+        }
+
+        .cinema-dialog {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 940px;
+            background: rgba(22, 14, 12, 0.98);
+            border: 1px solid rgba(192, 57, 43, 0.4);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(192, 57, 43, 0.25);
+        }
+
+        .cinema-close-btn {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ede0d4;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cinema-close-btn:hover {
+            background: #c0392b;
+            color: white;
+        }
+
+        .cinema-player-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+        }
+
+        .cinema-player-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .cinema-modal-info {
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .cinema-modal-info h3 {
+            font-family: var(--font-display);
+            font-size: 1.45rem;
+            color: white;
+            font-weight: 800;
+        }
+
+        /* ═══════════════════════════════════
+           RESPONSIVE STYLES
+        ═══════════════════════════════════ */
+        @media (max-width: 768px) {
+            .intro-navbar {
+                padding: 20px 24px;
+            }
+
+            .intro-center-stage {
+                padding: 0 24px;
+            }
+
+            .hero-title {
+                font-size: 2.8rem;
+            }
+
+            .hero-actions-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-action-primary,
+            .btn-action-secondary,
+            .btn-action-trailer {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .intro-bottom-bar {
+                padding: 16px 24px;
+            }
+
+            .portal-stats-snippet {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="intro-viewport">
+        <!-- MOVING CINEMATIC BACKGROUND LAYERS -->
+        <div class="bg-layer-wrap">
+            <div class="bg-slide active" id="bgLayer1"></div>
+            <div class="bg-slide" id="bgLayer2"></div>
+        </div>
+
+        <!-- DARK CINEMATIC VIGNETTE -->
+        <div class="cinematic-vignette"></div>
+
+        <!-- FLOATING MAGICAL EMBER PARTICLES -->
+        <canvas id="emberCanvas"></canvas>
+
+        <!-- TOP NAVBAR -->
+        <header class="intro-navbar">
+            <a href="/" class="logo-wrap">
+                <div class="logo-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <div class="logo-text">Chibi<span>Bytes</span></div>
+            </a>
+
+            <div class="nav-actions">
+                <a href="/login" class="btn-nav-login">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </a>
+                <a href="/signup" class="btn-nav-register">
+                    <i class="fas fa-rocket"></i> Get Started
+                </a>
+            </div>
+        </header>
+
+        <!-- CENTER STAGE: DYNAMIC NETFLIX/CRUNCHYROLL BILLBOARD -->
+        <main class="intro-center-stage">
+            <div class="hero-top-badge" id="heroTopBadge">
+                <i class="fas fa-fire"></i> <span id="heroRankText">#1 Trending Anime</span> • MAL Verified
+            </div>
+
+            <h1 class="hero-title" id="heroAnimeTitle">
+                JUJUTSU KAISEN
+            </h1>
+
+            <div class="hero-meta-row" id="heroMetaRow">
+                <span class="meta-rating"><i class="fas fa-star"></i> <strong id="heroRating">8.75</strong></span>
+                <span class="meta-pill" id="heroYear">2020</span>
+                <span class="meta-pill" id="heroEpisodes">24 Eps</span>
+                <span class="meta-pill meta-age" id="heroAgeBadge">TV-MA</span>
+                <div class="meta-genre-tags" id="heroGenres">
+                    <span class="genre-tag">Action</span>
+                    <span class="genre-tag">Supernatural</span>
+                    <span class="genre-tag">Dark Fantasy</span>
+                </div>
+            </div>
+
+            <div class="hero-dynamic-tagline" id="heroDynamicTagline">
+                <i class="fas fa-quote-left"></i>
+                <span id="heroTaglineText">Curse the shadows. Unleash the domain.</span>
+            </div>
+
+            <p class="hero-description" id="heroDescription">
+                Yuji Itadori swallows a cursed talisman—the finger of Sukuna—and becomes caught in a lethal war between Jujutsu Sorcerers and malevolent Curses.
+            </p>
+
+            <div class="billboard-actions-row">
+                <button onclick="openCurrentTrailer()" class="btn-play-trailer" id="heroTrailerBtn">
+                    <i class="fas fa-play"></i> Watch Official Trailer
+                </button>
+
+                <a href="/anime" class="btn-explore-catalog">
+                    <i class="fas fa-layer-group"></i> Explore Catalog <i class="fas fa-arrow-right" style="font-size: 0.85rem; margin-left: 4px;"></i>
+                </a>
+            </div>
+        </main>
+
+        <!-- PREV / NEXT CHEVRON NAVIGATION -->
+        <button class="intro-carousel-nav prev" id="introPrevBtn" onclick="prevIntroSlide()" aria-label="Previous Featured Anime">
+            <i class="fas fa-chevron-left" style="pointer-events: none;"></i>
+        </button>
+        <button class="intro-carousel-nav next" id="introNextBtn" onclick="nextIntroSlide()" aria-label="Next Featured Anime">
+            <i class="fas fa-chevron-right" style="pointer-events: none;"></i>
+        </button>
+
+        <!-- BOTTOM CINEMATIC CAROUSEL SELECTOR -->
+        <footer class="intro-bottom-bar">
+            <div class="featured-pills-wrap" id="featuredPills">
+                <!-- Dynamically populated -->
+            </div>
+        </footer>
+    </div>
+
+    <!-- CINEMA TRAILER MODAL -->
+    <div class="cinema-modal" id="cinemaModal" onclick="handleCinemaBackdrop(event)">
+        <div class="cinema-backdrop"></div>
+        <div class="cinema-dialog">
+            <button class="cinema-close-btn" onclick="closeCinemaModal()">&times;</button>
+            <div class="cinema-player-wrapper">
+                <iframe id="cinemaIframe" src=""
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="cinema-modal-info">
+                <div>
+                    <h3 id="cinemaModalTitle">Official Trailer</h3>
+                    <p id="cinemaModalMeta" style="color: #a39080; font-size: 0.9rem; margin-top: 4px;"></p>
+                </div>
+                <a id="cinemaDirectYoutubeBtn" href="#" target="_blank" rel="noopener noreferrer"
+                    style="background: rgba(192, 57, 43, 0.3); border: 1px solid rgba(255, 107, 53, 0.5); color: #ede0d4; padding: 8px 18px; border-radius: 12px; font-size: 0.88rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fab fa-youtube" style="color: #ff4757;"></i> Watch on YouTube ↗
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIDDEN GUEST LOGIN FORM -->
+    <form id="guestLoginForm" action="/login" method="POST" style="display: none;">
+        <input type="hidden" name="username" value="demo_user">
+        <input type="hidden" name="password" value="User123!">
+    </form>
+
+    <script>
+        // High-Resolution Featured Anime with Moving Backdrops & Metadata
+        const FEATURED_SLIDES = [
+            {
+                id: 113415,
+                title: "JUJUTSU KAISEN",
+                tagline: "Curse the shadows. Unleash the domain.",
+                plot: "Yuji Itadori swallows a legendary cursed talisman—the finger of Sukuna—and becomes thrust into a lethal war between Jujutsu Sorcerers and malevolent Curses.",
+                banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/113415-jQBSkxWAAk83.jpg",
+                trailer: "pkKu9hLT-t8",
+                year: "2020",
+                rating: "8.75",
+                episodes: "24 Eps",
+                badge: "TV-MA",
+                genres: ["Action", "Supernatural", "Dark Fantasy"]
+            },
+            {
+                id: 101922,
+                title: "DEMON SLAYER",
+                tagline: "Set your heart ablaze with the Demon Slayer Corps.",
+                plot: "Tanjiro Kamado embarks on a perilous quest to avenge his slaughtered family and find a cure to turn his demon-transformed sister Nezuko back into a human.",
+                banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/101922-33MtJGsUSxga.jpg",
+                trailer: "VQGCKyvzIM4",
+                year: "2019",
+                rating: "8.65",
+                episodes: "26 Eps",
+                badge: "TV-14",
+                genres: ["Action", "Historical", "Fantasy"]
+            },
+            {
+                id: 151807,
+                title: "SOLO LEVELING",
+                tagline: "From the weakest hunter to the immortal Shadow Monarch.",
+                plot: "Sung Jinwoo, branded the 'Weakest Hunter of All Mankind', survives a catastrophic double dungeon and gains a quest log that allows him alone to level up endlessly.",
+                banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/151807-37yfQA3ym8PA.jpg",
+                trailer: "HkIKAnwLZCw",
+                year: "2024",
+                rating: "8.50",
+                episodes: "12 Eps",
+                badge: "TV-MA",
+                genres: ["Action", "Fantasy", "Urban Fantasy"]
+            },
+            {
+                id: 16498,
+                title: "ATTACK ON TITAN",
+                tagline: "Dedicate your heart. Fight for freedom beyond the walls.",
+                plot: "After giant man-eating Titans breach the colossal outer wall and destroy his hometown, Eren Yeager vows to cleanse the earth of every last Titan.",
+                banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498-8jpFCOcDmneX.jpg",
+                trailer: "MGRm4IzK1SQ",
+                year: "2013",
+                rating: "9.05",
+                episodes: "89 Eps",
+                badge: "TV-MA",
+                genres: ["Action", "Mystery", "Military"]
+            },
+            {
+                id: 154587,
+                title: "FRIEREN",
+                tagline: "An unforgettable voyage exploring the beauty of time.",
+                plot: "Elven mage Frieren outlives her heroic companions and embarks on a poignant new pilgrimage to fulfill their dying wishes and understand the human heart.",
+                banner: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/154587-ivXNJ23SM1xB.jpg",
+                trailer: "ZEkwCGJ3o7M",
+                year: "2023",
+                rating: "9.15",
+                episodes: "28 Eps",
+                badge: "PG-13",
+                genres: ["Adventure", "Drama", "Fantasy"]
+            }
+        ];
+
+        let currentIndex = 0;
+        let activeLayer = 1;
+        let slideTimer = null;
+
+        const bgLayer1 = document.getElementById('bgLayer1');
+        const bgLayer2 = document.getElementById('bgLayer2');
+        const heroTaglineText = document.getElementById('heroTaglineText');
+        const featuredPillsContainer = document.getElementById('featuredPills');
+
+        // Initialize Background Layers
+        function initIntro() {
+            renderPills();
+            setSlide(0, false);
+            startAutoCycle();
+            initEmberParticles();
+        }
+
+        function renderPills() {
+            featuredPillsContainer.innerHTML = FEATURED_SLIDES.map((slide, idx) => `
+                <div class="featured-pill ${idx === 0 ? 'active' : ''}" id="pill-${idx}" onclick="selectSlide(${idx})">
+                    <span style="opacity: 0.6; font-size: 0.75rem;">0${idx + 1}</span>
+                    <span>${slide.title}</span>
+                    <div class="pill-progress-bar"></div>
+                </div>
+            `).join('');
+        }
+
+        function setSlide(index, crossfade = true) {
+            currentIndex = index;
+            const slide = FEATURED_SLIDES[index];
+
+            // Smooth crossfade between two backdrop layers
+            const currentLayerEl = activeLayer === 1 ? bgLayer1 : bgLayer2;
+            const nextLayerEl = activeLayer === 1 ? bgLayer2 : bgLayer1;
+
+            if (crossfade) {
+                nextLayerEl.style.backgroundImage = `url('${slide.banner}')`;
+                nextLayerEl.classList.add('active');
+                currentLayerEl.classList.remove('active');
+                activeLayer = activeLayer === 1 ? 2 : 1;
+            } else {
+                currentLayerEl.style.backgroundImage = `url('${slide.banner}')`;
+                currentLayerEl.classList.add('active');
+            }
+
+            // Update Billboard Elements smoothly
+            const titleEl = document.getElementById('heroAnimeTitle');
+            const rankEl = document.getElementById('heroRankText');
+            const ratingEl = document.getElementById('heroRating');
+            const yearEl = document.getElementById('heroYear');
+            const epEl = document.getElementById('heroEpisodes');
+            const ageEl = document.getElementById('heroAgeBadge');
+            const genresEl = document.getElementById('heroGenres');
+            const descEl = document.getElementById('heroDescription');
+
+            if (titleEl) titleEl.style.opacity = '0';
+            if (heroTaglineText) heroTaglineText.style.opacity = '0';
+            if (descEl) descEl.style.opacity = '0';
+
+            setTimeout(() => {
+                if (titleEl) { titleEl.textContent = slide.title; titleEl.style.opacity = '1'; }
+                if (rankEl) rankEl.textContent = `#${index + 1} Trending Anime`;
+                if (ratingEl) ratingEl.textContent = slide.rating;
+                if (yearEl) yearEl.textContent = slide.year;
+                if (epEl) epEl.textContent = slide.episodes;
+                if (ageEl) ageEl.textContent = slide.badge;
+                if (genresEl) genresEl.innerHTML = slide.genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
+                if (heroTaglineText) { heroTaglineText.textContent = slide.tagline; heroTaglineText.style.opacity = '1'; }
+                if (descEl) { descEl.textContent = slide.plot; descEl.style.opacity = '1'; }
+            }, 200);
+
+            // Update active pill
+            document.querySelectorAll('.featured-pill').forEach((pill, idx) => {
+                if (idx === index) {
+                    pill.classList.add('active');
+                } else {
+                    pill.classList.remove('active');
+                }
+            });
+        }
+
+        function selectSlide(index) {
+            clearInterval(slideTimer);
+            setSlide(index, true);
+            startAutoCycle();
+        }
+
+        function startAutoCycle() {
+            slideTimer = setInterval(() => {
+                const nextIndex = (currentIndex + 1) % FEATURED_SLIDES.length;
+                setSlide(nextIndex, true);
+            }, 8000);
+        }
+
+        function nextIntroSlide() {
+            clearInterval(slideTimer);
+            const nextIndex = (currentIndex + 1) % FEATURED_SLIDES.length;
+            setSlide(nextIndex, true);
+            startAutoCycle();
+        }
+
+        function prevIntroSlide() {
+            clearInterval(slideTimer);
+            const prevIndex = (currentIndex - 1 + FEATURED_SLIDES.length) % FEATURED_SLIDES.length;
+            setSlide(prevIndex, true);
+            startAutoCycle();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextIntroSlide();
+            if (e.key === 'ArrowLeft') prevIntroSlide();
+        });
+
+        // Cinema Modal
+        function openCurrentTrailer() {
+            const current = FEATURED_SLIDES[currentIndex];
+            if (!current || !current.trailer) return;
+
+            const modal = document.getElementById('cinemaModal');
+            const iframe = document.getElementById('cinemaIframe');
+            const titleEl = document.getElementById('cinemaModalTitle');
+            const metaEl = document.getElementById('cinemaModalMeta');
+            const ytBtn = document.getElementById('cinemaDirectYoutubeBtn');
+
+            titleEl.textContent = `${current.title} — Official Trailer`;
+            metaEl.textContent = `${current.year} • ${(current.genres || []).join(', ')}`;
+            iframe.src = `https://www.youtube-nocookie.com/embed/${current.trailer}?autoplay=1&enablejsapi=1&rel=0`;
+            ytBtn.href = `https://www.youtube.com/watch?v=${current.trailer}`;
+
+            modal.classList.add('active');
+        }
+
+        function closeCinemaModal() {
+            const modal = document.getElementById('cinemaModal');
+            const iframe = document.getElementById('cinemaIframe');
+            if (iframe) iframe.src = '';
+            if (modal) modal.classList.remove('active');
+        }
+
+        function handleCinemaBackdrop(e) {
+            if (e.target.classList.contains('cinema-backdrop') || e.target.id === 'cinemaModal') {
+                closeCinemaModal();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeCinemaModal();
+        });
+
+        // 1-Click Instant Guest Demo Login
+        function instantDemoLogin() {
+            document.getElementById('guestLoginForm').submit();
+        }
+
+        // ═══════════════════════════════════
+        // FLOATING EMBER PARTICLES (60FPS)
+        // ═══════════════════════════════════
+        function initEmberParticles() {
+            const canvas = document.getElementById('emberCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const particleCount = 38;
+            const particles = [];
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 2.2 + 0.8,
+                    speedY: Math.random() * 0.7 + 0.3,
+                    speedX: (Math.random() - 0.5) * 0.4,
+                    opacity: Math.random() * 0.7 + 0.2,
+                    pulseSpeed: Math.random() * 0.02 + 0.01,
+                    hue: Math.random() > 0.4 ? 14 : 35 // red/orange embers
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach(p => {
+                    p.y -= p.speedY;
+                    p.x += p.speedX;
+                    p.opacity += Math.sin(Date.now() * p.pulseSpeed) * 0.008;
+
+                    if (p.y < -10) {
+                        p.y = canvas.height + 10;
+                        p.x = Math.random() * canvas.width;
+                    }
+                    if (p.x < -10) p.x = canvas.width + 10;
+                    if (p.x > canvas.width + 10) p.x = -10;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${p.hue}, 95%, 60%, ${Math.max(0.1, Math.min(0.9, p.opacity))})`;
+                    ctx.shadowBlur = p.radius * 6;
+                    ctx.shadowColor = `hsla(${p.hue}, 100%, 55%, 0.8)`;
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        document.addEventListener('DOMContentLoaded', initIntro);
+    </script>
+</body>
+
+</html>
