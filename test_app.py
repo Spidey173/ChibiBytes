@@ -15,6 +15,9 @@ class ChibiBytesTestCase(unittest.TestCase):
         test_users = ['testotaku', 'mismatch_user', 'trailer_fan', 'critic_otaku', 'watchlist_fan', 'cascade_user', 'superadmin']
         test_emails = ['test@chibibytes.com', 'mismatch@chibibytes.com', 'trailer@chibibytes.com', 'critic@chibibytes.com', 'wf@chibibytes.com', 'cascade@chibibytes.com', 'sa@chibibytes.com']
         with app.app_context():
+            uids = [u.id for u in User.query.filter(User.username.in_(test_users) | User.email.in_(test_emails)).all()]
+            if uids:
+                Watchlist.query.filter(Watchlist.user_id.in_(uids)).delete(synchronize_session=False)
             User.query.filter(User.username.in_(test_users) | User.email.in_(test_emails)).delete(synchronize_session=False)
             db.session.commit()
 
@@ -23,6 +26,9 @@ class ChibiBytesTestCase(unittest.TestCase):
         test_users = ['testotaku', 'mismatch_user', 'trailer_fan', 'critic_otaku', 'watchlist_fan', 'cascade_user', 'superadmin']
         test_emails = ['test@chibibytes.com', 'mismatch@chibibytes.com', 'trailer@chibibytes.com', 'critic@chibibytes.com', 'wf@chibibytes.com', 'cascade@chibibytes.com', 'sa@chibibytes.com']
         with app.app_context():
+            uids = [u.id for u in User.query.filter(User.username.in_(test_users) | User.email.in_(test_emails)).all()]
+            if uids:
+                Watchlist.query.filter(Watchlist.user_id.in_(uids)).delete(synchronize_session=False)
             User.query.filter(User.username.in_(test_users) | User.email.in_(test_emails)).delete(synchronize_session=False)
             db.session.commit()
 
