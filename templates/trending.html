@@ -1,0 +1,1410 @@
+{% extends "main-app.html" %}
+
+{% block content %}
+<style>
+    .trending-page-container {
+        max-width: 1400px;
+        min-height: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        color: #ede0d4;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Page Header */
+    .page-header {
+        padding: 35px 25px;
+        text-align: center;
+        background: linear-gradient(180deg, rgba(192, 57, 43, 0.18) 0%, rgba(26, 18, 16, 0.75) 100%);
+        margin-bottom: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        backdrop-filter: blur(14px);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #c0392b, #ff6b35, #c0392b);
+        background-size: 200% auto;
+        animation: shimmerLine 3s linear infinite;
+    }
+
+    @keyframes shimmerLine {
+        0% { background-position: 0% center; }
+        100% { background-position: 200% center; }
+    }
+
+    .page-title {
+        font-size: 2.6rem;
+        color: #ede0d4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+    }
+
+    .page-title i {
+        color: #e74c3c;
+    }
+
+    .page-subtitle {
+        font-size: 1rem;
+        color: #a39080;
+        margin: 0;
+    }
+
+    /* Navigation Filter Tabs */
+    .trending-nav-tabs {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 35px;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+    }
+
+    .nav-tab-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #a39080;
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-size: 0.92rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        font-family: inherit;
+    }
+
+    .nav-tab-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ede0d4;
+        transform: translateY(-2px);
+    }
+
+    .nav-tab-btn.active {
+        background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+        color: white;
+        border-color: #ff6b35;
+        box-shadow: 0 4px 20px rgba(192, 57, 43, 0.45);
+        transform: translateY(-2px);
+    }
+
+    .tab-badge {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+    }
+
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 40px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .section-title {
+        font-size: 1.45rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ede0d4;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .section-title i {
+        color: #e74c3c;
+    }
+
+    .section-tagline {
+        font-size: 0.85rem;
+        color: #a39080;
+        font-weight: 500;
+    }
+
+    /* Grid Layout - Uniform Across All Cards */
+    .trending-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 26px;
+        margin-bottom: 50px;
+    }
+
+    /* Uniform Anime Card */
+    .anime-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        contain: layout style;
+        content-visibility: auto;
+        contain-intrinsic-size: 290px 480px;
+    }
+
+    .anime-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #c0392b, #ff6b35);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: 5;
+    }
+
+    .anime-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(231, 76, 60, 0.35);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(192, 57, 43, 0.15);
+    }
+
+    .anime-card:hover::before {
+        opacity: 1;
+    }
+
+    /* Poster Container - Uncropped 2:3 Aspect Ratio */
+    .card-poster-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        overflow: hidden;
+        background: #140c0b;
+        transform: translateZ(0);
+        will-change: transform;
+    }
+
+    .card-poster-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: block;
+    }
+
+    .anime-card:hover .card-poster-img {
+        transform: scale(1.06);
+    }
+
+    .card-gradient-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(0,0,0,0.85) 100%);
+        pointer-events: none;
+    }
+
+    /* Netflix Top 10 Rank Badges */
+    .card-rank-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 4;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 10px;
+        font-weight: 900;
+        font-size: 0.92rem;
+        letter-spacing: -0.5px;
+        color: #fff;
+        background: linear-gradient(135deg, #c0392b 0%, #8e1b10 100%);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .card-rank-badge.rank-1 {
+        background: linear-gradient(135deg, #f1c40f 0%, #e67e22 100%);
+        color: #1a1005;
+        box-shadow: 0 4px 18px rgba(241, 196, 15, 0.65);
+        border-color: #ffd700;
+    }
+
+    .card-rank-badge.rank-2 {
+        background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+        color: #2c3e50;
+        box-shadow: 0 4px 18px rgba(236, 240, 241, 0.55);
+        border-color: #ffffff;
+    }
+
+    .card-rank-badge.rank-3 {
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+        color: #fff;
+        box-shadow: 0 4px 18px rgba(230, 126, 34, 0.6);
+        border-color: #f39c12;
+    }
+
+    /* Media Format Badge */
+    .card-format-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 4;
+        background: rgba(18, 12, 11, 0.78);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #ede0d4;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Hover Play Button */
+    .card-play-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 3;
+    }
+
+    .anime-card:hover .card-play-overlay {
+        opacity: 1;
+    }
+
+    .play-pulse-btn {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #c0392b, #ff6b35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        padding-left: 4px;
+        box-shadow: 0 0 25px rgba(255, 107, 53, 0.7);
+        transform: scale(0.85);
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .anime-card:hover .play-pulse-btn {
+        transform: scale(1);
+    }
+
+    /* Uniform Card Content */
+    .card-content {
+        padding: 18px 20px 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #ede0d4;
+        margin: 0 0 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+
+    .card-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: #a39080;
+    }
+
+    .meta-dot {
+        font-size: 0.6rem;
+        opacity: 0.5;
+    }
+
+    .meta-format-info {
+        color: #c4b5a5;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 130px;
+    }
+
+    .card-rating {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #ffd700;
+        font-weight: 700;
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.25);
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+    }
+
+    /* 3-4 Line Plot Container - Cleanly fits full statements with zero cutoff */
+    .card-plot {
+        font-size: 0.86rem;
+        line-height: 1.55;
+        color: #a39080;
+        margin: 0 0 16px;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 6em;
+    }
+
+    /* Card Footer - Perfectly Pinned to Bottom */
+    .card-footer {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-watchlist {
+        background: rgba(192, 57, 43, 0.15);
+        border: 1px solid rgba(192, 57, 43, 0.35);
+        color: #ede0d4;
+        padding: 8px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        font-family: inherit;
+    }
+
+    .btn-watchlist:hover:not(:disabled) {
+        background: rgba(192, 57, 43, 0.35);
+        border-color: #ff6b35;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px rgba(192, 57, 43, 0.4);
+    }
+
+    .btn-watchlist.in-watchlist {
+        background: rgba(39, 174, 96, 0.18);
+        border-color: rgba(39, 174, 96, 0.45);
+        color: #2ecc71;
+        cursor: default;
+    }
+
+    .btn-watchlist i {
+        color: #ffd700;
+    }
+
+    .btn-watchlist.in-watchlist i {
+        color: #2ecc71;
+    }
+
+    .card-genre-pill {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 5px 12px;
+        border-radius: 14px;
+        font-size: 0.78rem;
+        color: #ff6b35;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 110px;
+    }
+
+    /* Toast Notification */
+    .trending-toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: rgba(26, 18, 16, 0.96);
+        border: 1px solid rgba(192, 57, 43, 0.45);
+        border-left: 4px solid #ff4757;
+        color: #ede0d4;
+        padding: 16px 24px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.75);
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        z-index: 99999;
+        max-width: 440px;
+    }
+
+    .trending-toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .trending-toast-link {
+        color: #ff6b35;
+        font-weight: 700;
+        text-decoration: underline;
+        margin-left: 6px;
+        cursor: pointer;
+    }
+
+    .trending-toast-link:hover {
+        color: #ffd700;
+    }
+
+    /* Cinema Trailer Modal */
+    .cinema-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .cinema-modal.active {
+        display: flex;
+    }
+
+    .cinema-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.88);
+        backdrop-filter: blur(24px);
+    }
+
+    .cinema-modal-dialog {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        max-width: 900px;
+        background: rgba(26, 18, 16, 0.96);
+        border: 1px solid rgba(192, 57, 43, 0.35);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(192, 57, 43, 0.2);
+    }
+
+    .cinema-close-btn {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        z-index: 10;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ede0d4;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .cinema-close-btn:hover {
+        background: #c0392b;
+        color: white;
+    }
+
+    .cinema-player-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;
+        background: #000;
+    }
+
+    .cinema-player-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .cinema-details-trending {
+        padding: 24px 30px;
+    }
+
+    .cinema-details-trending h3 {
+        color: #ede0d4;
+        font-size: 1.55rem;
+        margin: 0 0 8px;
+        font-weight: 800;
+    }
+
+    @media (max-width: 768px) {
+        .trending-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 18px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+        }
+
+        .nav-tab-btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<div class="trending-page-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-fire"></i> Trending Now
+        </h1>
+        <p class="page-subtitle">The most popular & top-rated anime series and movies across the community</p>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="trending-nav-tabs">
+        <button class="nav-tab-btn active" onclick="switchCategoryTab('all')">
+            <i class="fas fa-layer-group"></i> All Rankings <span class="tab-badge">40</span>
+        </button>
+        <button class="nav-tab-btn" onclick="switchCategoryTab('trending-anime')">
+            <i class="fas fa-chart-line"></i> Trending Series <span class="tab-badge">10</span>
+        </button>
+        <button class="nav-tab-btn" onclick="switchCategoryTab('trending-movies')">
+            <i class="fas fa-ticket-alt"></i> Trending Movies <span class="tab-badge">10</span>
+        </button>
+        <button class="nav-tab-btn" onclick="switchCategoryTab('top-anime')">
+            <i class="fas fa-star"></i> Top Rated Series <span class="tab-badge">10</span>
+        </button>
+        <button class="nav-tab-btn" onclick="switchCategoryTab('top-movies')">
+            <i class="fas fa-crown"></i> Top Rated Movies <span class="tab-badge">10</span>
+        </button>
+    </div>
+
+    <!-- Top 10 Trending Anime Series -->
+    <div class="trending-section-block" id="section-trending-anime">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i> Top 10 Trending Anime Series
+            </h2>
+            <span class="section-tagline">Ranked by global community buzz</span>
+        </div>
+        <div class="trending-grid" id="trendingAnimeGrid"></div>
+    </div>
+
+    <!-- Top 10 Trending Movies -->
+    <div class="trending-section-block" id="section-trending-movies">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-ticket-alt"></i> Top 10 Trending Anime Movies
+            </h2>
+            <span class="section-tagline">Blockbusters and theatrical triumphs</span>
+        </div>
+        <div class="trending-grid" id="trendingMoviesGrid"></div>
+    </div>
+
+    <!-- Top 10 Rated Anime Series -->
+    <div class="trending-section-block" id="section-top-anime">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-star"></i> Top 10 Rated Anime Series
+            </h2>
+            <span class="section-tagline">Highest community rated masterpieces</span>
+        </div>
+        <div class="trending-grid" id="topRatedAnimeGrid"></div>
+    </div>
+
+    <!-- Top 10 Rated Movies -->
+    <div class="trending-section-block" id="section-top-movies">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-crown"></i> Top 10 Rated Anime Movies
+            </h2>
+            <span class="section-tagline">Critically acclaimed cinematic legends</span>
+        </div>
+        <div class="trending-grid" id="topRatedMoviesGrid"></div>
+    </div>
+</div>
+
+<!-- Cinema Trailer Modal -->
+<div class="cinema-modal" id="trendingCinemaModal" onclick="handleTrendingCinemaBackdrop(event)">
+    <div class="cinema-modal-backdrop"></div>
+    <div class="cinema-modal-dialog">
+        <button class="cinema-close-btn" onclick="closeTrendingCinemaModal()">&times;</button>
+        <div class="cinema-player-wrapper" id="trendingPlayerWrapper">
+            <iframe id="trendingCinemaIframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+        <div class="cinema-details-trending">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+                <div>
+                    <h3 id="trendingModalTitle">Anime Title</h3>
+                    <p id="trendingModalJpTitle" style="color: #ff6b35; font-size: 0.88rem; font-weight: 600; margin-top: 2px; display: none;"></p>
+                    <p id="trendingModalMeta" style="color: #a39080; font-size: 0.92rem; margin: 8px 0;"></p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button id="trendingModalWatchlistBtn" onclick="toggleModalWatchlist()" class="btn-watchlist">
+                        <i class="fas fa-plus"></i> Add to Watchlist
+                    </button>
+                    <a id="trendingDirectYoutubeBtn" href="#" target="_blank" rel="noopener noreferrer" style="display: none; background: rgba(192, 57, 43, 0.25); border: 1px solid rgba(255, 107, 53, 0.4); color: #ede0d4; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; text-decoration: none; align-items: center; gap: 8px;">
+                        <i class="fab fa-youtube" style="color: #ff4757;"></i> YouTube ↗
+                    </a>
+                </div>
+            </div>
+            <div id="trendingModalGenres" style="display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0;"></div>
+            <p id="trendingModalPlot" style="color: #ede0d4; font-size: 0.95rem; line-height: 1.6; margin-top: 12px;"></p>
+            <div id="trendingModalInsightsWrap" style="margin-top: 16px; padding: 14px 18px; background: rgba(192, 57, 43, 0.12); border: 1px solid rgba(255, 107, 53, 0.25); border-radius: 12px; display: none;">
+                <h4 style="color: #ff6b35; font-size: 0.88rem; display: flex; align-items: center; gap: 6px; margin: 0 0 6px 0;">
+                    <i class="fas fa-sparkles"></i> Insights & Trivia
+                </h4>
+                <p id="trendingModalInsights" style="color: #a39080; font-size: 0.88rem; line-height: 1.5; margin: 0;"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="trending-toast" id="trendingToast">
+    <i class="fas fa-check-circle" style="color: #2ecc71; font-size: 1.4rem;"></i>
+    <div style="flex: 1;">
+        <span id="trendingToastText"></span>
+        <a id="trendingToastLink" href="/watchlist" class="trending-toast-link">View Watchlist →</a>
+    </div>
+</div>
+
+<script>
+    const serverAnime = {{ anime_list | tojson | safe }} || [];
+    const serverMovies = {{ movies_list | tojson | safe }} || [];
+    let animeDatabase = [];
+    let userWatchlist = [];
+    let activeModalItem = null;
+    let activeCategoryTab = 'all';
+
+    const NON_GENRES = ['popular', 'top', 'featured', 'award', 'trending', 'new', 'all'];
+
+    // Curated rich 3-4 line complete statements and verified YouTube trailers for all 40 trending slots
+    const CURATED_INFO = {
+        'One Piece': {
+            plot: 'Monkey D. Luffy sets sail across the treacherous Grand Line with his eccentric Straw Hat crew. Together they brave perilous seas, ruthless warlords, and naval fleets to claim the legendary One Piece and crown Luffy as King of the Pirates.',
+            trailer_youtube_id: 'S8_YwFLCh4U',
+            episodes: '1000+ eps',
+            studio: 'Toei Animation',
+            japanese_title: 'ワンピース',
+            insights: 'Eiichiro Oda\'s generational saga stands as the best-selling manga in history, renowned for unmatched world-building and character longevity.'
+        },
+        'Bleach': {
+            plot: 'Substitute Soul Reaper Ichigo Kurosaki enters the final catastrophic war as the ancient Quincy king Yhwach awakens. With the Soul Society pushed to the brink of extinction, Ichigo must master his true ancestral powers to avert universal collapse.',
+            trailer_youtube_id: 'e8YBesRKq_U',
+            episodes: '52 eps',
+            studio: 'Studio Pierrot',
+            japanese_title: 'BLEACH 千年血戦篇',
+            insights: 'Directed by Tomohisa Taguchi, the Thousand-Year Blood War features movie-tier cinematic sakuga animation and enhanced manga canon sequences.'
+        },
+        'Jujutsu Kaisen': {
+            plot: 'High schooler Yuji Itadori swallows a cursed finger of the King of Curses, plunging him into the secret and lethal realm of Jujutsu Sorcerers. Alongside Megumi, Nobara, and Gojo Satoru, he wages war against horrifying curses threatening humanity.',
+            trailer_youtube_id: 'pkKu9hLT-t8',
+            episodes: '47 eps',
+            studio: 'MAPPA',
+            japanese_title: '呪術廻戦',
+            insights: 'Winner of Anime of the Year, MAPPA redefined modern supernatural action through groundbreaking choreography and kinetic sound design.'
+        },
+        'Naruto': {
+            plot: 'Shunned by his village as the host of the Nine-Tailed Fox, spirited ninja Naruto Uzumaki vows to earn everyone\'s respect. Through grueling training, indomitable will, and loyal friendships, he fights to become the greatest Hokage in history.',
+            trailer_youtube_id: '-G9BqkgZXRA',
+            episodes: '220 eps',
+            studio: 'Studio Pierrot',
+            japanese_title: 'ナルト',
+            insights: 'A cornerstone of the global anime explosion, Masashi Kishimoto\'s tale embodies perseverance, empathy, and bonds forged in battle.'
+        },
+        'Attack on Titan': {
+            plot: 'After humanity is driven behind colossal concentric walls by man-eating Titans, young Eren Yeager vows to exterminate every last giant. As shocking secrets emerge, Eren and the Scout Regiment fight to reclaim human freedom at any cost.',
+            trailer_youtube_id: 'MGRm4IzK1SQ',
+            episodes: '87 eps',
+            studio: 'WIT Studio & MAPPA',
+            japanese_title: '進撃の巨人',
+            insights: 'Hajime Isayama\'s dark fantasy masterpiece is universally acclaimed for breathless plot twists, moral ambiguity, and symphonic scores by Hiroyuki Sawano.'
+        },
+        'Demon Slayer: Kimetsu no Yaiba': {
+            plot: 'After a demonic massacre claims his family and transforms his sister Nezuko into a demon, kindhearted Tanjiro Kamado joins the Demon Slayer Corps. Armed with his sun blade and unwavering resolve, he battles fierce demons to cure his sister.',
+            trailer_youtube_id: 'VQGCKyvzIM4',
+            episodes: '55 eps',
+            studio: 'ufotable',
+            japanese_title: '鬼滅の刃',
+            insights: 'ufotable set unprecedented industry animation standards, seamlessly fusing 3D digital environments with dynamic 2D traditional hand-drawn action.'
+        },
+        'Death Note': {
+            plot: 'Brilliant high school prodigy Light Yagami discovers a supernatural notebook granting the power to execute anyone whose name is written within. As he attempts to forge a crime-free utopia, an enigmatic detective known as L begins a battle of wits.',
+            trailer_youtube_id: 'NlJZ-YgAt-c',
+            episodes: '37 eps',
+            studio: 'Madhouse',
+            japanese_title: 'デスノート',
+            insights: 'Directed by Tetsuro Araki, Death Note is widely hailed as the definitive psychological cat-and-mouse thriller in anime history.'
+        },
+        'Chainsaw Man': {
+            plot: 'Impoverished devil hunter Denji is betrayed and killed, but revived as a fearsome hybrid devil through a pact with his pet Pochita. Recruited into the Public Safety Division by Makima, he unleashes bloody chainsaw blades against terrifying threats.',
+            trailer_youtube_id: 'v4yLeNt-kCU',
+            episodes: '12 eps',
+            studio: 'MAPPA',
+            japanese_title: 'チェンソーマン',
+            insights: 'Tatsuki Fujimoto\'s subversive dark fantasy earned worldwide acclaim for cinematic direction, unhinged characters, and twelve unique ending themes.'
+        },
+        'Frieren: Beyond Journey\'s End': {
+            plot: 'Centuries after helping defeat the Demon King, nearly immortal elven mage Frieren reflects on the ephemeral lives of her mortal comrades. Embarking on a pilgrimage to understand human connection, she guides a new generation of apprentices.',
+            trailer_youtube_id: 'ZEkwCGJ3o7M',
+            episodes: '28 eps',
+            studio: 'Madhouse',
+            japanese_title: '葬送のフリーレン',
+            insights: 'Achieving the #1 highest MyAnimeList rating of all time, Frieren blends contemplative emotional depth with breathtaking fantasy combat.'
+        },
+        'Hunter x Hunter (2011)': {
+            plot: 'Determined to find the father who abandoned him to become an elite Hunter, young Gon Freecss takes the perilous Hunter Examination. Teaming up with Killua, Kurapika, and Leorio, he embarks on an odyssey across treacherous continents.',
+            trailer_youtube_id: 'd6kBeJjTGnY',
+            episodes: '148 eps',
+            studio: 'Madhouse',
+            japanese_title: 'HUNTER×HUNTER',
+            insights: 'Yoshihiro Togashi\'s sophisticated Nen combat system and the legendary Chimera Ant arc elevated modern battle shōnen to literary heights.'
+        },
+        'Fullmetal Alchemist: Brotherhood': {
+            plot: 'After a forbidden transmutation ritual costs Edward an arm and a leg and bounds Alphonse\'s soul to armor, the Elric brothers search for the Philosopher\'s Stone. Uncovering a sinister military conspiracy, they fight to restore their broken bodies.',
+            trailer_youtube_id: '--IcmZkvL0Q',
+            episodes: '64 eps',
+            studio: 'Bones',
+            japanese_title: '鋼の錬金術師 FULLMETAL ALCHEMIST',
+            insights: 'Faithfully adapting Hiromu Arakawa\'s complete manga, Brotherhood is celebrated as one of the most perfectly paced and conclusive series ever made.'
+        },
+        'Gintama Season 3': {
+            plot: 'In an alternate Edo Japan conquered by extraterrestrial aliens, eccentric former samurai Gintoki Sakata takes on odd jobs with his Yorozuya crew. Balancing absurd comedic parodies with heart-wrenching sword battles, they defend their chaotic world.',
+            trailer_youtube_id: 'd5E_d-9K9rM',
+            episodes: '51 eps',
+            studio: 'BN Pictures',
+            japanese_title: '銀魂°',
+            insights: 'Featuring the acclaimed Shogun Assassination and Farewell Shinsengumi arcs, Season 3 marked the dramatic crescendo of Hideaki Sorachi\'s classic.'
+        },
+        'Re:ZERO -Starting Life in Another World- Season 4': {
+            plot: 'Transported to a fantasy realm with the agonizing ability to rewind time upon dying, Subaru Natsuki endures trauma to protect those he cherishes. Facing sinister archbishops and ancient calamities, he wages an unyielding battle against cruel fate.',
+            trailer_youtube_id: 'i8EjBP85cCc',
+            episodes: '16 eps',
+            studio: 'White Fox',
+            japanese_title: 'Re:ゼロから始める異世界生活',
+            insights: 'Renowned for profound psychological deconstruction of the isekai genre, highlighting raw human vulnerability and resilience.'
+        },
+        'Attack on Titan Season 3 Part 2': {
+            plot: 'The Scout Regiment launches their desperate operation to retake Wall Maria and reach the enigmatic basement in Shiganshina. Trapped between the Beast, Armored, and Colossal Titans, humanity stakes its survival on Erwin and Levi\'s daring gambits.',
+            trailer_youtube_id: 'MGRm4IzK1SQ',
+            episodes: '10 eps',
+            studio: 'WIT Studio',
+            japanese_title: '進撃の巨人 Season 3 Part 2',
+            insights: 'Boasting the highest-rated individual episodes in television history on IMDb, this arc delivers unforgettable dramatic payoff.'
+        },
+        'Steins;Gate': {
+            plot: 'Eccentric self-proclaimed mad scientist Rintarou Okabe accidentally invents a microwave device capable of transmitting text messages into the past. As his alterations spiral into devastating dystopias, he frantically navigates divergent worldlines.',
+            trailer_youtube_id: '27OZc-ku6is',
+            episodes: '24 eps',
+            studio: 'White Fox',
+            japanese_title: 'シュタインズ・ゲート',
+            insights: 'A gold standard of hard sci-fi time travel fiction, renowned for intricate causal loops and Mamoru Miyano\'s tour-de-force vocal performance.'
+        },
+        'Kaguya-sama: Love is War -Ultra Romantic-': {
+            plot: 'At prestigious Shuchiin Academy, brilliant student council leaders Miyuki Shirogane and Kaguya Shinomiya are desperately in love but far too proud to confess. Engaging in intricate psychological mind games, each schemes to make the other yield first.',
+            trailer_youtube_id: 'RN4FFgHpAZo',
+            episodes: '13 eps',
+            studio: 'A-1 Pictures',
+            japanese_title: 'かぐや様は告らせたい-ウルトラロマンティック-',
+            insights: 'Masterfully directed by Mamoru Hatakeyama, season 3 culminates in one of the most romantic and visually creative climaxes in anime rom-com history.'
+        },
+        'A Silent Voice': {
+            plot: 'Haunted by his elementary school bullying of deaf classmate Shoko Nishimiya, remorseful teenager Shoya Ishida isolates himself from society. Seeking redemption before giving up on life, he sets out to make amends and discover true forgiveness.',
+            trailer_youtube_id: 'nfK6UgLra7g',
+            duration: '130 min',
+            director: 'Naoko Yamada',
+            japanese_title: '聲の形',
+            insights: 'Naoko Yamada\'s poetic direction at Kyoto Animation earned global acclaim for sensitive, honest depictions of disability and mental health.'
+        },
+        'Your Name': {
+            plot: 'High school strangers Mitsuha from rural Itomori and Taki from bustling Tokyo begin mysteriously swapping bodies across space and time. As they navigate each other\'s lives, an approaching cosmic disaster compels them to find one another.',
+            trailer_youtube_id: 'xU47nhruN-Q',
+            duration: '106 min',
+            director: 'Makoto Shinkai',
+            japanese_title: '君の名は。',
+            insights: 'A global cultural phenomenon that shattered international box office records with RADWIMPS\' chart-topping soundtrack and Shinkai\'s skies.'
+        },
+        'Spirited Away': {
+            plot: 'While moving to a new neighborhood, ten-year-old Chihiro inadvertently stumbles into a mystical bathhouse realm populated by spirits and gods. When her parents are turned into pigs, she must work under the witch Yubaba to regain their freedom.',
+            trailer_youtube_id: 'ByXuk9QqQkk',
+            duration: '125 min',
+            director: 'Hayao Miyazaki',
+            japanese_title: '千と千尋の神隠し',
+            insights: 'Hayao Miyazaki\'s Academy Award-winning masterpiece remains one of the greatest cinematic achievements in animation history.'
+        },
+        'Demon Slayer: Mugen Train': {
+            plot: 'Tanjiro, Nezuko, Zenitsu, and Inosuke join Flame Hashira Kyojuro Rengoku aboard the mysterious Mugen Train to investigate missing demon slayers. Ensnared in sleep by Lower One demon Enmu, they battle mind-bending nightmares in a high-speed clash.',
+            trailer_youtube_id: 'ATJYac_dORw',
+            duration: '117 min',
+            director: 'Haruo Sotozaki',
+            japanese_title: '劇場版 鬼滅の刃 無限列車編',
+            insights: 'The highest-grossing film in Japanese history and the highest-grossing anime film worldwide, earning over $500 million.'
+        },
+        'Weathering With You': {
+            plot: 'Runaway teenager Hodaka arrives in rain-drenched Tokyo and befriends Hina, an orphaned girl who can clear the stormy skies through prayer. As their bond deepens, they uncover the harrowing personal cost tied to manipulating nature\'s weather.',
+            trailer_youtube_id: 'Q6iK6DjV_iE',
+            duration: '112 min',
+            director: 'Makoto Shinkai',
+            japanese_title: '天気の子',
+            insights: 'Japan\'s official submission for the 92nd Academy Awards, celebrated for photorealistic atmospheric visuals and environmental themes.'
+        },
+        'Howl\'s Moving Castle': {
+            plot: 'After a vindictive witch curses young milliner Sophie with the body of a ninety-year-old woman, she takes refuge inside wizard Howl\'s wandering castle. Amid an escalating war, Sophie uncovers the tender heart behind Howl\'s vanity and magic.',
+            trailer_youtube_id: 'iwROgK94zcM',
+            duration: '119 min',
+            director: 'Hayao Miyazaki',
+            japanese_title: 'ハウルの動く城',
+            insights: 'Adapted from Diana Wynne Jones\' novel, Miyazaki blended steampunk mechanical genius with anti-war sentiment and Joe Hisaishi\'s waltz.'
+        },
+        'Princess Mononoke': {
+            plot: 'In feudal Japan, cursed prince Ashitaka journeys west in search of a cure, only to find himself caught in a war between Tatara iron-miners and forest gods. Striving for peace, he meets San, a fierce warrior raised by the sacred wolf god Moro.',
+            trailer_youtube_id: '4OiMOHRDs14',
+            duration: '134 min',
+            director: 'Hayao Miyazaki',
+            japanese_title: 'もののけ姫',
+            insights: 'Studio Ghibli\'s epic historical drama celebrated worldwide for its non-binary philosophical exploration of industrialization and ecology.'
+        },
+        'I Want to Eat Your Pancreas': {
+            plot: 'An introverted high school bookworm discovers the secret diary of his cheerful classmate Sakura Yamauchi, learning she suffers from a terminal pancreatic illness. Entrusted with her final months, they forge an unforgettable emotional bond.',
+            trailer_youtube_id: 'MmoBvmJA9XI',
+            duration: '108 min',
+            director: 'Shinichiro Ushijima',
+            japanese_title: '君の膵臓をたべたい',
+            insights: 'A deeply moving story examining grief, authenticity, and living life to the fullest despite mortality\'s shadow.'
+        },
+        'Grave of the Fireflies': {
+            plot: 'Amid the devastation of firebombings in World War II Kobe, teenage Seita and his four-year-old sister Setsuko struggle to survive alone in the countryside. An unforgettable masterpiece portraying the resilience of sibling love against war.',
+            trailer_youtube_id: '4vPeTSRd580',
+            duration: '89 min',
+            director: 'Isao Takahata',
+            japanese_title: '火垂るの墓',
+            insights: 'Isao Takahata\'s haunting autobiographical adaptation is revered by film critics worldwide as one of the most powerful anti-war films ever produced.'
+        },
+        'Kiki\'s Delivery Service': {
+            plot: 'Upon turning thirteen, cheerful young witch Kiki flies to a picturesque seaside town with her companion black cat Jiji to begin her independence. Starting a flying delivery courier service, she learns to overcome self-doubt and reclaim her magic.',
+            trailer_youtube_id: '4bG17OYs-GA',
+            duration: '103 min',
+            director: 'Hayao Miyazaki',
+            japanese_title: '魔女の宅急便',
+            insights: 'A quintessential coming-of-age classic exploring adolescent vulnerability, creative burnout, and the joy of finding one\'s purpose.'
+        },
+        'Chainsaw Man – The Movie: Reze Arc': {
+            plot: 'Denji\'s chaotic life as a Public Safety devil hunter is upended when he meets Reze, a sweet girl working at a quiet café. When explosive secrets ignite, Denji finds himself caught in an adrenaline-pumping duel between affection and deadly deceit.',
+            trailer_youtube_id: 'v4yLeNt-kCU',
+            duration: '100 min',
+            director: 'MAPPA Staff',
+            japanese_title: '劇場版 チェンソーマン レゼ篇',
+            insights: 'Focusing on the tragic and explosive Reze saga, this cinematic adaptation brings Fujimoto\'s most romantic and lethal arc to theaters.'
+        },
+        'Gintama: THE VERY FINAL': {
+            plot: 'The Yorozuya, Shinsengumi, and allies from across Edo band together for one last stand against the immortal Utsuro to protect earth\'s future. With heart-pounding sword duels and tears, Gintoki confronts his tragic past in the grand finale.',
+            trailer_youtube_id: 'SvRHM7AONB4',
+            duration: '104 min',
+            director: 'Chizuru Miyawaki',
+            japanese_title: '銀魂 THE FINAL',
+            insights: 'Topping the Japanese box office over Demon Slayer upon release, THE FINAL concluded fifteen years of beloved Gintama history.'
+        },
+        'Violet Evergarden: the Movie': {
+            plot: 'Former child soldier Violet Evergarden continues her career as an Auto Memory Doll, transcribing heartfelt letters that bridge wounded souls across the country. Still yearning for Major Gilbert, she pursues a mysterious letter carrying a hint of his return.',
+            trailer_youtube_id: 'BUfSen2rYQs',
+            duration: '140 min',
+            director: 'Taichi Ishidate',
+            japanese_title: '劇場版 ヴァイオレット・エヴァーガーデン',
+            insights: 'Kyoto Animation\'s triumphant masterpiece brought Violet\'s search for the meaning of "I love you" to a heart-wrenching close.'
+        },
+        'Kizumonogatari Part 3: Reiketsu': {
+            plot: 'High schooler Koyomi Araragi successfully defeats all three vampire hunters to restore the legendary vampire Kiss-shot Acerola-orion. Realizing the horrifying true nature of her existence, he faces an agonising final battle to reclaim his humanity.',
+            trailer_youtube_id: '4nTLr6Uf9Ug',
+            duration: '83 min',
+            director: 'Tatsuya Oishi',
+            japanese_title: '傷物語〈III 冷血篇〉',
+            insights: 'SHAFT\'s avant-garde visual direction and French New Wave influences culminate in one of anime\'s most visceral vampire duels.'
+        },
+        'Gintama: The Final Chapter - Be Forever Yorozuya': {
+            plot: 'When Gintoki is mysteriously hurled five years into a post-apocalyptic future Edo, he finds the city devastated and his Yorozuya friends estranged. Disguising his identity, he embarks on a desperate mission through time to avert their tragic destiny.',
+            trailer_youtube_id: 'UhJM5rVqaF8',
+            duration: '110 min',
+            director: 'Yoichi Fujita',
+            japanese_title: '劇場版 銀魂 完結篇 万事屋よ永遠なれ',
+            insights: 'Penned entirely by creator Hideaki Sorachi, this alternate future narrative balances peak Gintama comedy with heartfelt drama.'
+        }
+    };
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Clean rating: preserves full precision (e.g. 8.75 or 9.0)
+    function cleanRating(raw) {
+        if (raw === undefined || raw === null || raw === '') return '8.5';
+        const str = String(raw).trim();
+        const match = str.match(/(\d+\.?\d*)/);
+        if (!match) return '8.5';
+        const val = parseFloat(match[1]);
+        if (isNaN(val) || val <= 0) return '8.5';
+        return (val % 1 === 0) ? val.toFixed(1) : (val.toFixed(2).endsWith('0') ? val.toFixed(1) : val.toFixed(2));
+    }
+
+    function getValidGenres(category) {
+        if (!category) return ['Anime'];
+        const parts = (typeof category === 'string' ? category.split(',') : (Array.isArray(category) ? category : []))
+            .map(s => String(s).trim())
+            .filter(s => s && !NON_GENRES.includes(s.toLowerCase()));
+        return parts.length > 0 ? parts : ['Anime'];
+    }
+
+    function getPrimaryGenre(category) {
+        return getValidGenres(category)[0] || 'Anime';
+    }
+
+    function showToast(message, linkUrl = '/watchlist', linkText = 'View Watchlist →') {
+        const toast = document.getElementById('trendingToast');
+        const text = document.getElementById('trendingToastText');
+        const link = document.getElementById('trendingToastLink');
+        if (!toast || !text) return;
+        
+        text.textContent = message;
+        if (link) {
+            link.href = linkUrl;
+            link.textContent = linkText;
+            link.style.display = linkUrl ? 'inline-block' : 'none';
+        }
+
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function switchCategoryTab(tabKey) {
+        activeCategoryTab = tabKey;
+        
+        // Update tab buttons
+        document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        if (window.event && window.event.currentTarget) {
+            window.event.currentTarget.classList.add('active');
+        }
+
+        // Show/hide sections
+        const sections = {
+            'trending-anime': document.getElementById('section-trending-anime'),
+            'trending-movies': document.getElementById('section-trending-movies'),
+            'top-anime': document.getElementById('section-top-anime'),
+            'top-movies': document.getElementById('section-top-movies')
+        };
+
+        if (tabKey === 'all') {
+            Object.values(sections).forEach(s => { if (s) s.style.display = 'block'; });
+        } else {
+            Object.keys(sections).forEach(k => {
+                if (sections[k]) {
+                    sections[k].style.display = (k === tabKey) ? 'block' : 'none';
+                }
+            });
+            if (sections[tabKey]) {
+                sections[tabKey].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
+    function isItemInWatchlist(id, mediaType) {
+        const isMovie = (mediaType === 'movie');
+        const cleanType = isMovie ? 'movie' : 'anime';
+        return userWatchlist.some(w => {
+            const wType = (w.media_type === 'movie') ? 'movie' : 'anime';
+            return w.anime_id == id && wType === cleanType;
+        });
+    }
+
+    function createCard(item, rank) {
+        const inWl = isItemInWatchlist(item.id, item.type);
+        const primaryGenre = getPrimaryGenre(item.genre);
+        const rankClass = rank === 1 ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : ''));
+        const rankIcon = rank === 1 ? '<i class="fas fa-crown"></i>' : (rank <= 3 ? '<i class="fas fa-fire"></i>' : '');
+        const durationText = item.type === 'movie' ? (item.duration || 'Movie') : (item.episodes || 'Series');
+
+        return `
+            <div class="anime-card" data-id="${item.id}" data-type="${item.type}" onclick="openTrendingCinemaModal(${item.id}, '${item.type}')" style="cursor: pointer;" title="Click to view trailer and info">
+                <div class="card-poster-wrap">
+                    <img class="card-poster-img" src="${item.image}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.src='https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21-YCDoj1EkAxFn.jpg'">
+                    <div class="card-gradient-overlay"></div>
+                    
+                    <div class="card-rank-badge ${rankClass}">
+                        ${rankIcon} #${rank}
+                    </div>
+
+                    <div class="card-format-badge">
+                        <i class="${item.type === 'movie' ? 'fas fa-film' : 'fas fa-tv'}"></i>
+                        ${item.type === 'movie' ? 'Movie' : 'Series'}
+                    </div>
+
+                    <div class="card-play-overlay">
+                        <div class="play-pulse-btn" title="Watch Trailer"><i class="fas fa-play"></i></div>
+                    </div>
+                </div>
+
+                <div class="card-content">
+                    <h3 class="card-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h3>
+                    
+                    <div class="card-meta">
+                        <span class="meta-year">${item.year}</span>
+                        <span class="meta-dot">•</span>
+                        <span class="meta-format-info">${escapeHtml(durationText)}</span>
+                        <div class="card-rating">
+                            <i class="fas fa-star"></i>
+                            <span>${item.rating}</span>
+                        </div>
+                    </div>
+
+                    <p class="card-plot">${escapeHtml(item.plot || 'Synopsis not available.')}</p>
+
+                    <div class="card-footer">
+                        <button class="btn-watchlist ${inWl ? 'in-watchlist' : ''}" 
+                                id="wl-btn-${item.id}-${item.type}" 
+                                ${inWl ? 'disabled' : ''} 
+                                onclick="addToWatchlist(${item.id}, '${item.type}', event)">
+                            <i class="${inWl ? 'fas fa-check' : 'fas fa-plus'}"></i> 
+                            ${inWl ? 'In Watchlist' : 'Watchlist'}
+                        </button>
+                        <span class="card-genre-pill" title="${escapeHtml(primaryGenre)}">${escapeHtml(primaryGenre)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function addToWatchlist(id, mediaType, event) {
+        if (event) event.stopPropagation();
+        const isMovie = (mediaType === 'movie');
+        const cleanType = isMovie ? 'movie' : 'anime';
+        const item = animeDatabase.find(x => x.id == id && (isMovie ? x.type === 'movie' : (x.type === 'anime' || x.type === 'series')));
+        if (!item) return;
+
+        const btn = document.getElementById(`wl-btn-${item.id}-${item.type}`);
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Added';
+            btn.classList.add('in-watchlist');
+            btn.disabled = true;
+        }
+
+        fetch('/add_to_watchlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                anime_id: item.id,
+                title: item.title,
+                year: item.year,
+                rating: item.rating,
+                image: item.image,
+                category: item.genre,
+                description: item.plot,
+                media_type: cleanType
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success || data.status === 'success') {
+                userWatchlist.push({ anime_id: item.id, media_type: cleanType });
+                showToast(`"${item.title}" added to your Watchlist!`, '/watchlist', 'View Watchlist →');
+                updateModalWatchlistBtn(item);
+            } else {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-plus"></i> Watchlist';
+                    btn.classList.remove('in-watchlist');
+                    btn.disabled = false;
+                }
+                showToast(data.error || 'Failed to add to watchlist', '', '');
+            }
+        })
+        .catch(err => {
+            console.error('Watchlist add error:', err);
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-plus"></i> Watchlist';
+                btn.classList.remove('in-watchlist');
+                btn.disabled = false;
+            }
+        });
+    }
+
+    function openTrendingCinemaModal(id, mediaType) {
+        const isMovie = (mediaType === 'movie');
+        const item = animeDatabase.find(x => x.id == id && (isMovie ? x.type === 'movie' : (x.type === 'anime' || x.type === 'series')));
+        if (!item) {
+            console.warn('Item not found for modal:', id, mediaType);
+            return;
+        }
+
+        activeModalItem = item;
+        document.getElementById('trendingModalTitle').textContent = item.title;
+
+        // Japanese Title
+        const jpEl = document.getElementById('trendingModalJpTitle');
+        if (jpEl) {
+            if (item.japanese_title) {
+                jpEl.textContent = item.japanese_title;
+                jpEl.style.display = 'block';
+            } else {
+                jpEl.style.display = 'none';
+            }
+        }
+
+        // Detailed Meta Row
+        const metaParts = [
+            `<span>${item.year}</span>`,
+            `<span>${item.type === 'movie' ? (item.duration || 'Movie') : (item.episodes || 'Series')}</span>`,
+            `<span style="color: #ffd700; font-weight: 700;"><i class="fas fa-star"></i> ${item.rating}</span>`
+        ];
+        if (item.type === 'movie' && item.director) {
+            metaParts.push(`<span>Dir. ${escapeHtml(item.director)}</span>`);
+        } else if (item.type !== 'movie' && item.studio) {
+            metaParts.push(`<span>${escapeHtml(item.studio)}</span>`);
+        }
+        document.getElementById('trendingModalMeta').innerHTML = metaParts.join(' • ');
+
+        // Genre Tags
+        const genresWrap = document.getElementById('trendingModalGenres');
+        if (genresWrap) {
+            const genres = getValidGenres(item.genre);
+            genresWrap.innerHTML = genres.map(g => `<span class="card-genre-pill" style="max-width: none; font-size: 0.8rem; padding: 4px 12px;">${escapeHtml(g)}</span>`).join('');
+        }
+
+        document.getElementById('trendingModalPlot').textContent = item.plot || 'No synopsis available.';
+
+        // Insights & Trivia
+        const insightsWrap = document.getElementById('trendingModalInsightsWrap');
+        const insightsText = document.getElementById('trendingModalInsights');
+        if (insightsWrap && insightsText) {
+            if (item.insights) {
+                insightsText.textContent = item.insights;
+                insightsWrap.style.display = 'block';
+            } else {
+                insightsWrap.style.display = 'none';
+            }
+        }
+
+        const iframe = document.getElementById('trendingCinemaIframe');
+        const wrapper = document.getElementById('trendingPlayerWrapper');
+        const ytBtn = document.getElementById('trendingDirectYoutubeBtn');
+
+        if (item.trailer_youtube_id) {
+            wrapper.style.display = 'block';
+            iframe.src = `https://www.youtube-nocookie.com/embed/${item.trailer_youtube_id}?autoplay=1&enablejsapi=1&rel=0`;
+            if (ytBtn) {
+                ytBtn.href = `https://www.youtube.com/watch?v=${item.trailer_youtube_id}`;
+                ytBtn.style.display = 'inline-flex';
+            }
+        } else {
+            wrapper.style.display = 'none';
+            iframe.src = '';
+            if (ytBtn) ytBtn.style.display = 'none';
+        }
+
+        updateModalWatchlistBtn(item);
+        const modal = document.getElementById('trendingCinemaModal');
+        if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+        if (modal) {
+            modal.classList.add('active');
+            const dialog = modal.querySelector('.cinema-modal-dialog');
+            if (dialog) dialog.scrollTop = 0;
+        }
+        document.body.style.overflow = 'hidden';
+    }
+
+    function updateModalWatchlistBtn(item) {
+        const btn = document.getElementById('trendingModalWatchlistBtn');
+        if (!btn || !item) return;
+
+        const inWl = isItemInWatchlist(item.id, item.type);
+        if (inWl) {
+            btn.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
+            btn.classList.add('in-watchlist');
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = '<i class="fas fa-plus"></i> Add to Watchlist';
+            btn.classList.remove('in-watchlist');
+            btn.disabled = false;
+        }
+    }
+
+    function toggleModalWatchlist() {
+        if (!activeModalItem) return;
+        addToWatchlist(activeModalItem.id, activeModalItem.type);
+    }
+
+    function closeTrendingCinemaModal() {
+        const modal = document.getElementById('trendingCinemaModal');
+        const iframe = document.getElementById('trendingCinemaIframe');
+        if (iframe) iframe.src = '';
+        if (modal) modal.classList.remove('active');
+        document.body.style.overflow = '';
+        activeModalItem = null;
+    }
+
+    function handleTrendingCinemaBackdrop(event) {
+        if (event.target.classList.contains('cinema-modal-backdrop') || event.target.id === 'trendingCinemaModal') {
+            closeTrendingCinemaModal();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeTrendingCinemaModal();
+    });
+
+    function renderGrids() {
+        // 1. Trending Series (Top 10)
+        const trendingSeries = animeDatabase
+            .filter(item => item.type === 'anime' || item.type === 'series')
+            .slice(0, 10);
+        const grid1 = document.getElementById('trendingAnimeGrid');
+        if (grid1) grid1.innerHTML = trendingSeries.map((item, idx) => createCard(item, idx + 1)).join('');
+
+        // 2. Trending Movies (Top 10)
+        const trendingMovies = animeDatabase
+            .filter(item => item.type === 'movie')
+            .slice(0, 10);
+        const grid2 = document.getElementById('trendingMoviesGrid');
+        if (grid2) grid2.innerHTML = trendingMovies.map((item, idx) => createCard(item, idx + 1)).join('');
+
+        // 3. Top Rated Series (Top 10 by Rating)
+        const topRatedSeries = animeDatabase
+            .filter(item => item.type === 'anime' || item.type === 'series')
+            .slice()
+            .sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0))
+            .slice(0, 10);
+        const grid3 = document.getElementById('topRatedAnimeGrid');
+        if (grid3) grid3.innerHTML = topRatedSeries.map((item, idx) => createCard(item, idx + 1)).join('');
+
+        // 4. Top Rated Movies (Top 10 by Rating)
+        const topRatedMovies = animeDatabase
+            .filter(item => item.type === 'movie')
+            .slice()
+            .sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0))
+            .slice(0, 10);
+        const grid4 = document.getElementById('topRatedMoviesGrid');
+        if (grid4) grid4.innerHTML = topRatedMovies.map((item, idx) => createCard(item, idx + 1)).join('');
+    }
+
+    function initTrendingData() {
+        const parsedAnime = (serverAnime || []).map(a => {
+            const rawScore = (a.mal_score && a.mal_score > 0) ? a.mal_score : a.rating;
+            const curated = CURATED_INFO[a.title] || CURATED_INFO[a.id] || {};
+            return {
+                id: a.id,
+                title: a.title,
+                year: curated.year || a.year || '2024',
+                genre: a.category || 'Anime',
+                rating: cleanRating(rawScore),
+                plot: curated.plot || a.description || 'Experience this thrilling anime sensation with breathtaking animation and unforgettable characters.',
+                type: 'anime',
+                image: a.image || a.modalImage || 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21-YCDoj1EkAxFn.jpg',
+                trailer_youtube_id: curated.trailer_youtube_id || a.trailer_youtube_id || '',
+                episodes: curated.episodes || a.episodes || '24 Episodes',
+                studio: curated.studio || a.studio || '',
+                status: a.status || 'Finished',
+                insights: curated.insights || a.insights || '',
+                japanese_title: a.japanese_title || curated.japanese_title || ''
+            };
+        });
+
+        const parsedMovies = (serverMovies || []).map(m => {
+            const curated = CURATED_INFO[m.title] || CURATED_INFO[m.id] || {};
+            return {
+                id: m.id,
+                title: m.title,
+                year: curated.year || m.year || '2024',
+                genre: m.category || 'Movie',
+                rating: cleanRating(m.rating),
+                plot: curated.plot || m.description || 'A cinematic anime masterpiece with breathtaking direction and unforgettable emotional connection.',
+                type: 'movie',
+                image: m.image || m.modalImage || 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21-YCDoj1EkAxFn.jpg',
+                trailer_youtube_id: curated.trailer_youtube_id || m.trailer_youtube_id || '',
+                duration: curated.duration || m.duration || '110 min',
+                director: curated.director || m.director || '',
+                insights: curated.insights || m.insights || '',
+                japanese_title: m.japanese_title || curated.japanese_title || ''
+            };
+        });
+
+        animeDatabase = [...parsedAnime, ...parsedMovies];
+        renderGrids();
+
+        // Sync fresh watchlist
+        fetch('/get_watchlist')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    userWatchlist = data;
+                    renderGrids();
+                }
+            })
+            .catch(err => console.error('Error fetching watchlist:', err));
+    }
+
+    document.addEventListener('DOMContentLoaded', initTrendingData);
+
+    // Fix browser back/forward: close modal, restore overflow, refresh watchlist on pageshow
+    window.addEventListener('pageshow', function(event) {
+        closeTrendingCinemaModal();
+        document.body.style.overflow = '';
+        fetch('/get_watchlist')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    userWatchlist = data;
+                    renderGrids();
+                }
+            })
+            .catch(err => console.error('Pageshow watchlist refresh error:', err));
+    });
+</script>
+{% endblock %}
