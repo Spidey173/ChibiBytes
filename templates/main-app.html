@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChibiBytes - {{ username }}</title>
+    <meta name="referrer" content="no-referrer">
+    <link rel="preconnect" href="https://s4.anilist.co" crossorigin>
+    <link rel="dns-prefetch" href="https://s4.anilist.co">
+    <link rel="preconnect" href="https://cdn.myanimelist.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.myanimelist.net">
+    <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
+    <link rel="dns-prefetch" href="https://upload.wikimedia.org">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --magma-black: #0d0d0d;
+            --magma-surface: #1a1210;
+            --magma-elevated: #261a15;
+            --magma-red: #c0392b;
+            --magma-ember: #e74c3c;
+            --magma-orange: #d35400;
+            --magma-glow: #ff6b35;
+            --text-primary: #ede0d4;
+            --text-secondary: #a39080;
+            --text-dim: #6b5b50;
+            --border-subtle: rgba(192, 57, 43, 0.12);
+            --surface-hover: rgba(192, 57, 43, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Hardware-accelerated smooth rendering */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--magma-black);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ═══════════════════════════════════
+           APP LAYOUT
+        ═══════════════════════════════════ */
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ═══════════════════════════════════
+           SIDEBAR — solid, warm dark
+        ═══════════════════════════════════ */
+        .sidebar {
+            background: var(--magma-surface);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* ═══════════════════════════════════
+           LOGO
+        ═══════════════════════════════════ */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            text-decoration: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--magma-red);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        /* ═══════════════════════════════════
+           USER INFO
+        ═══════════════════════════════════ */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            position: relative;
+            z-index: 2;
+            transition: var(--transition);
+        }
+
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--magma-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-details h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-details p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* ═══════════════════════════════════
+           NAVIGATION — clean, red accent
+        ═══════════════════════════════════ */
+        .nav-section {
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-link i {
+            font-size: 0.9rem;
+            width: 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-link:hover i {
+            color: var(--magma-ember);
+        }
+
+        /* Active state: thin red left border + tint */
+        .nav-link.active {
+            color: var(--text-primary);
+            background: var(--surface-hover);
+        }
+
+        .nav-link.active i {
+            color: var(--magma-ember);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 55%;
+            background: var(--magma-red);
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Logout */
+        .nav-link.logout-link:hover {
+            background: rgba(192, 57, 43, 0.06);
+        }
+
+        .nav-link.logout-link:hover i {
+            color: var(--magma-ember);
+        }
+
+        /* ═══════════════════════════════════
+           MAIN CONTENT
+        ═══════════════════════════════════ */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background: var(--magma-black);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ═══════════════════════════════════
+           UNIVERSAL CINEMA TRAILER MODAL (TRENDING THEME)
+           ═══════════════════════════════════ */
+        .cinema-modal {
+            display: none;
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 20px !important;
+            box-sizing: border-box !important;
+        }
+
+        .cinema-modal.active {
+            display: flex !important;
+        }
+
+        .cinema-modal-backdrop {
+            position: fixed !important;
+            inset: 0 !important;
+            background: rgba(0, 0, 0, 0.88) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            z-index: 1 !important;
+        }
+
+        .cinema-modal-dialog {
+            position: relative !important;
+            z-index: 2 !important;
+            width: 100% !important;
+            max-width: 900px !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            background: rgba(26, 18, 16, 0.98) !important;
+            border: 1px solid rgba(192, 57, 43, 0.4) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 50px rgba(192, 57, 43, 0.25) !important;
+            animation: cinemaModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        }
+
+        .cinema-modal-dialog::-webkit-scrollbar {
+            width: 6px;
+        }
+        .cinema-modal-dialog::-webkit-scrollbar-thumb {
+            background: rgba(192, 57, 43, 0.4);
+            border-radius: 4px;
+        }
+
+        @keyframes cinemaModalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .cinema-close-btn {
+            position: absolute !important;
+            top: 14px !important;
+            right: 16px !important;
+            z-index: 10 !important;
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important;
+            background: rgba(0, 0, 0, 0.75) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: #ede0d4 !important;
+            font-size: 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .cinema-close-btn:hover {
+            background: #c0392b !important;
+            color: white !important;
+            transform: scale(1.08) !important;
+        }
+
+        .cinema-player-wrapper {
+            position: relative !important;
+            width: 100% !important;
+            padding-top: 56.25% !important;
+            background: #000 !important;
+        }
+
+        .cinema-player-wrapper iframe {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            border: none !important;
+        }
+
+        .cinema-details-trending {
+            padding: 24px 30px !important;
+        }
+
+        .cinema-details-trending h3 {
+            color: #ede0d4 !important;
+            font-size: 1.55rem !important;
+            margin: 0 0 4px !important;
+            font-weight: 800 !important;
+        }
+
+        /* Trending Hover Play Button (Global) */
+        .card-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .anime-card:hover .card-play-overlay,
+        .movie-card:hover .card-play-overlay {
+            opacity: 1;
+        }
+
+        .play-pulse-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c0392b, #ff6b35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            padding-left: 4px;
+            box-shadow: 0 0 25px rgba(255, 107, 53, 0.7);
+            transform: scale(0.85);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .anime-card:hover .play-pulse-btn,
+        .movie-card:hover .play-pulse-btn {
+            transform: scale(1);
+        }
+
+        /* Scrollbar */
+        .content-area::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: rgba(192, 57, 43, 0.2);
+            border-radius: 3px;
+        }
+
+        .content-area::-webkit-scrollbar-thumb:hover {
+            background: rgba(192, 57, 43, 0.35);
+        }
+
+        /* ═══════════════════════════════════
+           MOBILE SIDEBAR TOGGLE
+        ═══════════════════════════════════ */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 100;
+            width: 42px;
+            height: 42px;
+            background: var(--magma-red);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .mobile-toggle:hover {
+            background: var(--magma-ember);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 8;
+        }
+
+        /* ═══════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════ */
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                width: 260px;
+                z-index: 50;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .content-area {
+                padding: 64px 16px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="app-container">
+        <div class="sidebar" id="sidebar">
+            <a href="/anime" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-film"></i>
+                </div>
+                <div class="logo-text">ChibiBytes</div>
+            </a>
+
+            <div class="user-info">
+                <div class="user-avatar" style="{% if session.get('role') == 'admin' or role == 'admin' %}background: #ff6b35;{% endif %}">
+                    <i class="fas {% if session.get('role') == 'admin' or role == 'admin' %}fa-user-shield{% else %}fa-user{% endif %}"></i>
+                </div>
+                <div class="user-details">
+                    <h3>{{ username }}</h3>
+                    <p>{% if session.get('role') == 'admin' or role == 'admin' %}<span style="color:#ff6b35; font-weight:600;">System Administrator</span>{% else %}Anime Enthusiast{% endif %}</p>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="section-title">Categories</div>
+                <ul class="nav-links">
+                    <li><a class="nav-link {% if active_page == 'anime' %}active{% endif %}" href="/anime">
+                        <i class="fas fa-tv"></i>
+                        <span>Anime</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'movies' %}active{% endif %}" href="/movies">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Movies</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'genres' %}active{% endif %}" href="/genres">
+                        <i class="fas fa-theater-masks"></i>
+                        <span>Genres</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'chat' %}active{% endif %}" href="/chat">
+                        <i class="fas fa-comments"></i>
+                        <span>Chat Assistant</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'trending' %}active{% endif %}" href="/trending">
+                        <i class="fas fa-fire"></i>
+                        <span>Trending Now</span>
+                    </a></li>
+                    <li><a class="nav-link {% if active_page == 'watchlist' %}active{% endif %}" href="/watchlist">
+                        <i class="fas fa-star"></i>
+                        <span>My Watchlist</span>
+                    </a></li>
+                    {% if session.get('role') == 'admin' or role == 'admin' %}
+                    <li><a class="nav-link {% if active_page == 'admin' %}active{% endif %}" href="/admin" style="color: #ff6b35; font-weight: 600;">
+                        <i class="fas fa-shield-alt" style="color: #ff6b35;"></i>
+                        <span>Admin Panel</span>
+                    </a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="nav-section" style="margin-top: auto;">
+                <ul class="nav-links">
+                    <li><a class="nav-link logout-link" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="content-area">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════
+           MOBILE SIDEBAR TOGGLE
+        ═══════════════════════════════════ */
+        const mobileToggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('active');
+                const icon = mobileToggle.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+                const icon = mobileToggle.querySelector('i');
+                icon.classList.add('fa-bars');
+                icon.classList.remove('fa-times');
+            });
+        }
+
+        /* ═══════════════════════════════════
+           PORTAL CINEMA MODALS TO BODY
+           Guarantees position:fixed is 100% viewport-relative
+           even when the user has scrolled deep down the page.
+        ═══════════════════════════════════ */
+        function attachCinemaModalsToBody() {
+            document.querySelectorAll('.cinema-modal, .modal').forEach(m => {
+                if (m && m.parentElement !== document.body) {
+                    document.body.appendChild(m);
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', attachCinemaModalsToBody);
+        window.addEventListener('load', attachCinemaModalsToBody);
+        // Also observe DOM additions for dynamically rendered modals
+        const observer = new MutationObserver(attachCinemaModalsToBody);
+        observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+</body>
+</html>
