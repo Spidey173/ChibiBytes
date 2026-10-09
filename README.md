@@ -1,17 +1,17 @@
 <div align="center">
 
 # 🎌 ChibiBytes
-### High-Performance AI-Powered Anime & Media Discovery Engine
+### Full-Stack Anime & Movie Discovery Web Application with AI Assistant
 
 [![Production Deployment](https://img.shields.io/badge/Production-chibibytes.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://chibibytes.vercel.app/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Framework-Flask_2.3-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![Neon Database](https://img.shields.io/badge/Database-Neon_PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
-[![Groq LPU](https://img.shields.io/badge/LLM_Engine-Groq_LPU-F55036?style=for-the-badge&logo=fastapi&logoColor=white)](https://groq.com/)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL_(Neon)-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
+[![AI Assistant](https://img.shields.io/badge/LLM-Groq_%7C_Gemini-F55036?style=for-the-badge&logo=fastapi&logoColor=white)](https://groq.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  A modern, production-grade media discovery platform engineered with Flask modular blueprints, Neon PostgreSQL cloud clustering, in-memory catalog caching, and a low-latency conversational AI engine powered by Groq and Google Gemini.
+  A responsive media discovery web application built with Flask modular blueprints, PostgreSQL (Neon Cloud) via SQLAlchemy, in-memory catalog caching, interactive cinema-style trailer playback, and a conversational AI companion using Groq and Google Gemini.
 </p>
 
 [**Explore Live Application →**](https://chibibytes.vercel.app/)
@@ -24,7 +24,7 @@
 
 <div align="center">
 
-| 💬 Conversational AI Assistant | 📑 Synchronous Watchlist Engine |
+| 💬 Conversational AI Assistant | 📑 Personal Watchlist Management |
 | :---: | :---: |
 | ![AI Assistant Chat](Images/Chat.png) | ![Watchlist Management](Images/Watchlist.png) |
 
@@ -32,14 +32,15 @@
 
 ---
 
-## ⚡ Engineering & Architectural Highlights
+## ⚡ Core Features & Engineering Highlights
 
-- **Ultra-Low Latency AI Engine (~150ms)**: Dual-layer LLM pipeline utilizing Groq LPU inference (`qwen/qwen3.8-27b`) with automatic failover to Google Gemini 1.5 Flash. Intent detection dynamically separates greetings, queries, recommendations, and card requests.
-- **In-Memory Catalog Cache (< 0.1ms)**: Pre-warmed catalog cache in server memory eliminating repetitive database queries across anime, movie, and genre listings.
-- **Cloud-Native PostgreSQL (Neon)**: Fully standardized on Neon PostgreSQL with resilient connection pooling (`pool_size=10`, `max_overflow=20`, `pool_recycle=300`) to prevent cold-start bottlenecks.
-- **Transparent Gzip Compression**: Custom WSGI HTTP middleware automatically compresses response bodies over 500 bytes, yielding an **80–88% reduction in transfer payloads**.
-- **Synchronous Watchlist System**: Instant bookmarking and list updates with optimistic UI updates and idempotent backend synchronization.
-- **Modular Flask Blueprint Architecture**: Decoupled domain separation across Authentication (`auth_bp`), Media Catalog (`catalog_bp`), and Watchlist Operations (`watchlist_bp`).
+- **Dual-Provider AI Assistant**: Integrated chatbot that queries Groq (Llama / open models) for fast generation and gracefully falls back to Google Gemini. Features rule-based intent routing to serve instant recommendation cards, answers, or conversational replies.
+- **In-Memory Catalog Caching**: Pre-loads catalog data into memory to minimize redundant database round-trips for frequently requested anime, movie, and genre listings.
+- **PostgreSQL Database with SQLAlchemy**: Built on PostgreSQL (hosted on Neon) using SQLAlchemy ORM models. Includes connection pooling (`pool_pre_ping`, `pool_recycle`), schema migrations, and relational cascading for users, watchlists, reviews, and chat logs.
+- **Unified Trailer Player**: Embedded YouTube modal player across trending, anime, movie, and watchlist cards with responsive viewport centering.
+- **Modular Blueprint Architecture**: Clean separation of concerns across Authentication (`auth`), Media Catalog (`catalog`), and Watchlist Operations (`watchlist`).
+- **HTTP Response Compression**: Lightweight gzip middleware applied to response payloads over 500 bytes to reduce network transfer size.
+- **CI/CD & Automated Testing**: Automated test suite executing against a containerized PostgreSQL service in GitHub Actions CI with an isolated SQLite fallback for local test runs.
 
 ---
 
@@ -47,57 +48,58 @@
 
 ```mermaid
 graph TD
-    Client["Client Browser (Glassmorphism UI / Vanilla JS)"]
-    Edge["Vercel Edge Network / Serverless Runtime"]
-    Flask["Flask Application Gateway (app.py)"]
+    Client["Client Browser (Responsive HTML5 / Vanilla CSS & JS)"]
+    Edge["Vercel Serverless Hosting / Local Flask Server"]
+    Flask["Flask Application (app.py)"]
 
     subgraph Blueprints ["Modular Blueprint Layer"]
-        AuthBP["Auth Blueprint (PBKDF2 Password Hashing)"]
-        CatalogBP["Catalog Blueprint (Browse, Search, Filter)"]
-        WatchlistBP["Watchlist Blueprint (CRUD & Synchronization)"]
+        AuthBP["Auth Blueprint (PBKDF2 Password Hashing, Session State)"]
+        CatalogBP["Catalog Blueprint (Browse, Search, Genres, Reviews)"]
+        WatchlistBP["Watchlist Blueprint (Add, Remove, Toggle Favorite)"]
     end
 
-    subgraph CachingAndData ["Data & Storage Layer"]
-        MemCache["In-Memory Catalog Cache (<0.1ms)"]
-        NeonDB[("Neon Cloud PostgreSQL Cluster")]
+    subgraph DataLayer ["Data & Storage Layer"]
+        MemCache["In-Memory Catalog Cache"]
+        PostgresDB[("PostgreSQL Database (Neon)")]
     end
 
-    subgraph AIEngine ["Intelligent Assistant Pipeline"]
-        IntentRouter["Intent Classifier & Sanitizer"]
-        Groq["Groq LPU (Primary: ~150ms)"]
-        Gemini["Google Gemini (Fallback)"]
+    subgraph AIAssistant ["AI Assistant Pipeline"]
+        IntentRouter["Intent Classifier & Keyword Matching"]
+        Groq["Groq API (Primary)"]
+        Gemini["Google Gemini API (Fallback)"]
     end
 
-    Client -->|HTTPS / Gzip Encoded| Edge
+    Client -->|HTTP / JSON Requests| Edge
     Edge --> Flask
     Flask --> AuthBP
     Flask --> CatalogBP
     Flask --> WatchlistBP
 
     CatalogBP <--> MemCache
-    AuthBP <--> NeonDB
-    WatchlistBP <--> NeonDB
-    CatalogBP <--> NeonDB
+    AuthBP <--> PostgresDB
+    WatchlistBP <--> PostgresDB
+    CatalogBP <--> PostgresDB
 
     CatalogBP --> IntentRouter
     IntentRouter --> Groq
     IntentRouter -.->|Fallback| Gemini
-    Groq --> MemCache
+    IntentRouter --> MemCache
 ```
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Domain | Technology | Description |
+| Domain | Technology | Usage in Project |
 | :--- | :--- | :--- |
-| **Backend** | Python 3.11+, Flask 2.3.3 | Microframework with modular blueprint architecture |
-| **Database** | Neon Cloud PostgreSQL | Managed serverless PostgreSQL with ACID compliance |
-| **ORM** | SQLAlchemy 2.0+ & Flask-SQLAlchemy | Declarative data models with connection pool recycling |
-| **AI / LLM** | Groq LPU & Google Gemini SDK | High-speed structured dialogue and media intelligence |
-| **Compression** | Gzip Middleware | Dynamic HTTP response body compression |
-| **Frontend** | Modern Vanilla CSS & JavaScript | Zero-framework glassmorphism, responsive CSS grid |
-| **Hosting** | Vercel Serverless | Python serverless function deployment with zero cold starts |
+| **Backend** | Python 3.11+, Flask 2.3.3 | REST APIs, Jinja2 rendering, and modular blueprints |
+| **Database** | PostgreSQL (Neon Cloud) | Persistent storage for users, catalog, watchlists, and reviews |
+| **ORM** | SQLAlchemy 2.0+ / Flask-SQLAlchemy | Declarative data modeling, relations, and migrations |
+| **AI / LLM** | Groq API & Google Gemini SDK | Natural language anime queries, recommendations, and conversational responses |
+| **Frontend** | Vanilla HTML5, CSS3, JavaScript | Custom responsive UI, modal dialogs, and asynchronous fetch requests |
+| **Testing** | Python `unittest` | End-to-end route, database constraint, and authentication tests |
+| **CI / CD** | GitHub Actions | Automated test pipeline with PostgreSQL container service |
+| **Deployment** | Vercel | Serverless web deployment |
 
 ---
 
@@ -105,38 +107,43 @@ graph TD
 
 ```text
 ChibiBytes/
+├── .github/workflows/
+│   └── ci.yml              # GitHub Actions CI workflow (PostgreSQL service + tests)
 ├── api/
-│   └── index.py            # Vercel serverless gateway
-├── app.py                  # Application entrypoint & HTTP compression middleware
-├── chatbot.py              # Groq & Gemini hybrid AI assistant engine
-├── database.py             # Neon PostgreSQL connection pooling & data migrations
-├── models.py               # Declarative SQLAlchemy ORM models
-├── requirements.txt        # Production dependencies
-├── vercel.json             # Vercel deployment configuration
+│   └── index.py            # Vercel serverless function entrypoint
 ├── blueprints/
-│   ├── auth.py             # Authentication, session state & user RBAC
-│   ├── catalog.py          # Media catalog, genre indexing & reviews
-│   └── watchlist.py        # Watchlist persistence & bookmark handlers
+│   ├── auth.py             # User registration, login, logout & session checks
+│   ├── catalog.py          # Media catalog, search, genre filtering & reviews
+│   └── watchlist.py        # Watchlist CRUD operations & favorite toggles
 ├── services/
-│   ├── anime_service.py    # Jikan REST API data ingest & background sync
-│   └── movie_service.py    # Movie catalog ingestion & trailer bindings
-├── templates/              # Jinja2 frontend views (Anime, Movies, Chat, Trending)
-└── Images/                 # Showcase screenshots & application previews
+│   └── anime_service.py    # Jikan MAL API ingestion & background catalog sync
+├── templates/              # Jinja2 frontend HTML templates
+├── app.py                  # Flask application initialization & gzip middleware
+├── chatbot.py              # AI assistant logic with Groq and Gemini integrations
+├── database.py             # Database engine setup, pooling & seed data
+├── models.py               # Declarative SQLAlchemy models (User, Anime, Movie, Watchlist)
+├── test_app.py             # Automated unit and integration test suite
+├── vercel.json             # Vercel deployment routing configuration
+├── requirements.txt        # Python package dependencies
+└── README.md               # Project documentation
 ```
 
 ---
 
-## 📡 API Specification
+## 📡 Key API Endpoints
 
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
 | `POST` | `/api/chat` | Send prompt to AI Assistant (Groq/Gemini) | No |
+| `GET` | `/api/chat/history` | Retrieve recent user conversation history | Yes |
 | `POST` | `/api/chat/clear` | Clear user chat history | Yes |
-| `GET` | `/api/watchlist` | Retrieve user watchlist items | Yes |
-| `POST` | `/api/watchlist/add` | Add an anime/movie to user watchlist | Yes |
-| `POST` | `/api/watchlist/remove` | Remove item from user watchlist | Yes |
-| `POST` | `/api/reviews` | Submit user rating and review | Yes |
-| `GET` | `/api/trending` | Fetch ranked trending media titles | No |
+| `GET` | `/get_watchlist` | Retrieve authenticated user's watchlist | Yes |
+| `POST` | `/add_to_watchlist` | Add an anime or movie to user watchlist | Yes |
+| `POST` | `/toggle_favorite/<id>` | Toggle favorite flag on a watchlist item | Yes |
+| `DELETE`| `/remove_from_watchlist/<id>` | Remove item by ID from user watchlist | Yes |
+| `GET` | `/api/anime/search` | Search anime catalog by keyword | No |
+| `GET` | `/api/anime/featured` | Fetch featured anime title | No |
+| `GET/POST`| `/api/reviews` | Retrieve or submit user review for a title | Read: No / Post: Yes |
 
 ---
 
@@ -163,6 +170,7 @@ SECRET_KEY=your_secure_random_key_here
 GROQ_API_KEY=gsk_your_groq_api_key_here
 GEMINI_API_KEY=AIzaSy_your_gemini_key_here
 ```
+*(Note: If `DATABASE_URL` is omitted during local unit testing, tests automatically fall back to a local SQLite test database).*
 
 ### 4. Run the Development Server
 ```bash
@@ -170,24 +178,27 @@ python app.py
 ```
 Access the application at `http://localhost:5002`.
 
+### 5. Run the Automated Test Suite
+```bash
+python3 -m unittest discover -v
+```
+
 ---
 
 ## 🌐 Production Deployment (Vercel)
 
-The application is configured out-of-the-box for **Vercel Serverless Functions**.
+The application includes serverless routing configured in [vercel.json](file:///Users/spidey./Downloads/ChibiBytes-main/vercel.json) and [api/index.py](file:///Users/spidey./Downloads/ChibiBytes-main/api/index.py).
 
-1. Link the project and set environment variables:
-   ```bash
-   vercel link --project chibibytes
-   vercel env add DATABASE_URL production
-   vercel env add SECRET_KEY production
-   vercel env add GROQ_API_KEY production
-   ```
-2. Deploy to production:
+1. Link project and configure environment variables in the Vercel dashboard or CLI:
+   - `DATABASE_URL`
+   - `SECRET_KEY`
+   - `GROQ_API_KEY` (optional for primary AI responses)
+   - `GEMINI_API_KEY` (optional fallback)
+2. Deploy:
    ```bash
    vercel deploy --prod
    ```
-3. Live production domain: **[https://chibibytes.vercel.app](https://chibibytes.vercel.app)**
+3. Live production URL: **[https://chibibytes.vercel.app](https://chibibytes.vercel.app)**
 
 ---
 
