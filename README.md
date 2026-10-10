@@ -11,7 +11,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  A responsive media discovery web application built with Flask modular blueprints, PostgreSQL (Neon Cloud) via SQLAlchemy, in-memory catalog caching, interactive cinema-style trailer playback, and a conversational AI companion using Groq and Google Gemini.
+  A media discovery web application built with Flask modular blueprints, PostgreSQL (Neon Cloud) via SQLAlchemy, in-memory catalog caching, interactive cinema-style trailer playback, and a conversational AI companion using Groq and Google Gemini.
 </p>
 
 [**Explore Live Application →**](https://chibibytes.vercel.app/)
@@ -32,15 +32,15 @@
 
 ---
 
-## ⚡ Core Features & Engineering Highlights
+## ⚡ Core Features & Technical Implementation
 
-- **Dual-Provider AI Assistant**: Integrated chatbot that queries Groq (Llama / open models) for fast generation and gracefully falls back to Google Gemini. Features rule-based intent routing to serve instant recommendation cards, answers, or conversational replies.
-- **In-Memory Catalog Caching**: Pre-loads catalog data into memory to minimize redundant database round-trips for frequently requested anime, movie, and genre listings.
-- **PostgreSQL Database with SQLAlchemy**: Built on PostgreSQL (hosted on Neon) using SQLAlchemy ORM models. Includes connection pooling (`pool_pre_ping`, `pool_recycle`), schema migrations, and relational cascading for users, watchlists, reviews, and chat logs.
-- **Unified Trailer Player**: Embedded YouTube modal player across trending, anime, movie, and watchlist cards with responsive viewport centering.
-- **Modular Blueprint Architecture**: Clean separation of concerns across Authentication (`auth`), Media Catalog (`catalog`), and Watchlist Operations (`watchlist`).
-- **HTTP Response Compression**: Lightweight gzip middleware applied to response payloads over 500 bytes to reduce network transfer size.
-- **CI/CD & Automated Testing**: Automated test suite executing against a containerized PostgreSQL service in GitHub Actions CI with an isolated SQLite fallback for local test runs.
+- **Dual-Provider AI Assistant**: Conversational assistant powered by Groq (Llama / open models) for fast generation with automatic fallback to Google Gemini if rate limits or errors occur. Uses keyword and rule-based intent matching to trigger rich recommendation cards or direct conversational replies.
+- **In-Memory Catalog Caching**: Pre-fetches and caches catalog query results in memory upon startup to minimize redundant database round-trips for high-traffic browsing and genre filtering.
+- **Relational Storage with SQLAlchemy**: PostgreSQL persistence (hosted on Neon) using SQLAlchemy ORM. Configured with connection pooling (`pool_pre_ping`, `pool_recycle`), foreign key constraints, and cascade deletion for users, watchlists, reviews, and chat history.
+- **Embedded Modal Trailer Player**: Responsive YouTube trailer modal integrated into cards across trending, anime, movies, and user watchlists without navigating away from the page.
+- **Modular Blueprint Architecture**: Clear codebase separation into dedicated blueprints for Authentication (`auth`), Media Catalog & Reviews (`catalog`), and Watchlists (`watchlist`).
+- **Gzip Response Compression**: Dynamic Flask `after_request` middleware compressing HTTP responses exceeding 500 bytes for clients with `Accept-Encoding: gzip`, reducing payload sizes over the wire.
+- **Automated Testing & CI**: Comprehensive test suite covering authentication, access control, database constraints, and API routes running against PostgreSQL in GitHub Actions CI (with SQLite fallback for local development).
 
 ---
 
@@ -53,7 +53,7 @@ graph TD
     Flask["Flask Application (app.py)"]
 
     subgraph Blueprints ["Modular Blueprint Layer"]
-        AuthBP["Auth Blueprint (PBKDF2 Password Hashing, Session State)"]
+        AuthBP["Auth Blueprint (PBKDF2 Hashing, Session State)"]
         CatalogBP["Catalog Blueprint (Browse, Search, Genres, Reviews)"]
         WatchlistBP["Watchlist Blueprint (Add, Remove, Toggle Favorite)"]
     end
@@ -92,13 +92,13 @@ graph TD
 
 | Domain | Technology | Usage in Project |
 | :--- | :--- | :--- |
-| **Backend** | Python 3.11+, Flask 2.3.3 | REST APIs, Jinja2 rendering, and modular blueprints |
-| **Database** | PostgreSQL (Neon Cloud) | Persistent storage for users, catalog, watchlists, and reviews |
-| **ORM** | SQLAlchemy 2.0+ / Flask-SQLAlchemy | Declarative data modeling, relations, and migrations |
-| **AI / LLM** | Groq API & Google Gemini SDK | Natural language anime queries, recommendations, and conversational responses |
-| **Frontend** | Vanilla HTML5, CSS3, JavaScript | Custom responsive UI, modal dialogs, and asynchronous fetch requests |
-| **Testing** | Python `unittest` | End-to-end route, database constraint, and authentication tests |
-| **CI / CD** | GitHub Actions | Automated test pipeline with PostgreSQL container service |
+| **Backend** | Python 3.11+, Flask 2.3.3 | REST endpoints, Jinja2 template rendering, and modular blueprints |
+| **Database** | PostgreSQL (Neon Cloud) | Relational storage for users, catalog, watchlists, and reviews |
+| **ORM** | SQLAlchemy 2.0+ / Flask-SQLAlchemy | Declarative data models, relational mappings, and cascading |
+| **AI / LLM** | Groq API & Google Gemini SDK | Natural language anime queries, recommendations, and conversational chat |
+| **Frontend** | Vanilla HTML5, CSS3, JavaScript | Responsive UI, modal playback dialogs, and asynchronous fetch requests |
+| **Testing** | Python `unittest` | Unit and integration tests covering routes, models, and auth |
+| **CI / CD** | GitHub Actions | Automated CI workflow running against a PostgreSQL service container |
 | **Deployment** | Vercel | Serverless web deployment |
 
 ---
@@ -134,7 +134,7 @@ ChibiBytes/
 
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/api/chat` | Send prompt to AI Assistant (Groq/Gemini) | No |
+| `POST` | `/api/chat` | Send prompt to AI Assistant (Groq / Gemini fallback) | No |
 | `GET` | `/api/chat/history` | Retrieve recent user conversation history | Yes |
 | `POST` | `/api/chat/clear` | Clear user chat history | Yes |
 | `GET` | `/get_watchlist` | Retrieve authenticated user's watchlist | Yes |
@@ -170,7 +170,7 @@ SECRET_KEY=your_secure_random_key_here
 GROQ_API_KEY=gsk_your_groq_api_key_here
 GEMINI_API_KEY=AIzaSy_your_gemini_key_here
 ```
-*(Note: If `DATABASE_URL` is omitted during local unit testing, tests automatically fall back to a local SQLite test database).*
+*(Note: If `DATABASE_URL` is omitted during local unit testing, tests automatically fall back to an isolated SQLite test database).*
 
 ### 4. Run the Development Server
 ```bash
@@ -187,13 +187,13 @@ python3 -m unittest discover -v
 
 ## 🌐 Production Deployment (Vercel)
 
-The application includes serverless routing configured in [vercel.json](file:///Users/spidey./Downloads/ChibiBytes-main/vercel.json) and [api/index.py](file:///Users/spidey./Downloads/ChibiBytes-main/api/index.py).
+The application includes serverless routing configured in [vercel.json](vercel.json) and [api/index.py](api/index.py).
 
 1. Link project and configure environment variables in the Vercel dashboard or CLI:
    - `DATABASE_URL`
    - `SECRET_KEY`
-   - `GROQ_API_KEY` (optional for primary AI responses)
-   - `GEMINI_API_KEY` (optional fallback)
+   - `GROQ_API_KEY` (primary AI responses)
+   - `GEMINI_API_KEY` (fallback AI responses)
 2. Deploy:
    ```bash
    vercel deploy --prod
